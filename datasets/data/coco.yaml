@@ -1,10 +1,10 @@
-data_root: 'S:\PascalVOC2012'
-train_dir: 'train'
-train_id_file: 'train.txt'
-val_dir: ''
-val_id_file: 'val.txt'
-test_dir: 'test'
-test_id_file: 'test.txt'
+data_root: 'S:\coco2017'
+train_dir: 'train2017'
+train_id_file: 'instances_train2017.json'
+val_dir: 'val2017'
+val_id_file: 'instances_val2017.json'
+test_dir: 'val2017'
+test_id_file: 'instances_val2017.json'
 num_classes: 80
 categories: [ 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
               'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
