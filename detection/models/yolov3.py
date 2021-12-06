@@ -26,13 +26,13 @@ class Yolov3(nn.Module):
 
         self.head = head(feature_channels=self.backbone_channels_per_level, num_levels=len(self.backbone_channels_per_level), num_anchors_per_level=num_anchors_per_level, num_classes=num_classes)
 
-    def forward(self, images):
+    def forward(self, images, val=False):
         backbone_out = self.backbone(images)
         neck_out = self.neck(backbone_out)
         head_out = self.head(neck_out)
 
         results = []
-        if not self.training:
+        if (self.training == False or val == True):
             for i in range(len(head_out)):
                 out = head_out[i].sigmoid()
                 bs, num_anchors, height, width, _ = out.size()
@@ -46,7 +46,9 @@ class Yolov3(nn.Module):
                 out = torch.cat((xy, wh, out[..., 4:]), -1)
                 results.append(out.view(bs, -1, self.num_classes + 5))
             results = torch.cat(results, 1)
-        return head_out if self.training else results
+
+            return (head_out, results)
+        return head_out
 
 
 def yolov3(backbone=None, neck=None, head=None, anchors=None, num_anchors_per_level=None, in_channels=3, num_classes=80, training=False):

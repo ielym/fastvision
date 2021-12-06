@@ -4,8 +4,6 @@ from ..tools import xywh2xyxy
 
 def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, max_det=300):
 
-    num_classes = prediction.shape[2] - 5
-
     conf_mask = prediction[..., 4] > conf_thres  # candidates
     prediction = prediction[conf_mask]
 
