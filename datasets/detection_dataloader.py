@@ -16,12 +16,11 @@ from .common.padding import Padding
 from ..detection.tools import xyxy2xywhn, xyxy2xywh
 
 class BaseDataset(Dataset):
-    def __init__(self, samples, input_size, num_classes, max_det):
+    def __init__(self, samples, input_size, max_det):
 
         self.samples = samples
 
         self.max_det = max_det
-        self.num_classes = num_classes
 
         self.input_size = input_size
         if isinstance(input_size, int):
@@ -104,102 +103,40 @@ class BaseDataset(Dataset):
             l[:, 0] = i  # add target image index for build_targets()
         return torch.stack(img, 0), torch.cat(label, 0)
 
-def load_imagesSets(path, imgset_name):
-    imgset_pathes = glob(os.path.join(path, imgset_name))
+def load_samples(data_dir, prefix):
 
-    imgsets = []
-    for imgset_path in imgset_pathes:
-        with open(imgset_path, 'r') as f:
+    images_dir = os.path.join(data_dir, 'images')
+    labels_dir = os.path.join(data_dir, 'labels')
+
+    img_names = os.listdir(images_dir)
+
+    samples = []
+    for img_name in tqdm.tqdm(img_names, desc=f'Extract {prefix} dataset '):
+        img_id = img_name.split('.')[0]
+
+        image_path = os.path.join(images_dir, img_name)
+        label_path = os.path.join(labels_dir, f'{img_id}.txt')
+
+        with open(label_path, 'r') as f:
             lines = f.readlines()
+
+        labels = []
         for line in lines:
-            imgsets.append(line.strip().split()[0].strip())
-    return imgsets
+            category_id, xmin, ymin, xmax, ymax = line.strip().split()
+            labels.append((float(category_id), float(xmin), float(ymin), float(xmax), float(ymax)))
+        samples.append((image_path, labels))
+    return samples
 
-    # function which load VOC format annotation
-def load_voc_annotation(annotation_path, img_path, category_names_idx_map, return_list):
-    '''
-    :param annotation_path: absolute annotation path
-    :return: a list contains a single image's labels : [ (category_id, xmin, ymin, xmax, ymax), (category_id, xmin, ymin, xmax, ymax), ... ]
-    '''
-    root = ET.parse(annotation_path).getroot()
+def create_dataloader(prefix, data_dir, batch_size, input_size, num_workers=0, shuffle=True, pin_memory=True, drop_last=False, max_det=200):
 
-    labels = []
-    for obj in root.findall('object'):
-        category_name = obj.find('name').text.strip()
-        category_id = category_names_idx_map[category_name]
+    samples = load_samples(data_dir, prefix)
 
-        bndbox = obj.find('bndbox')
-        x_min = int(float(bndbox.find('xmin').text.strip()))
-        y_min = int(float(bndbox.find('ymin').text.strip()))
-        x_max = int(float(bndbox.find('xmax').text.strip()))
-        y_max = int(float(bndbox.find('ymax').text.strip()))
+    dataset = BaseDataset(samples, input_size, max_det)
 
-        labels.append((category_id, x_min, y_min, x_max, y_max))
-
-    return_list.append((img_path, labels))
-
-def load_voc(data_dir, imgset_name, category_names, num_workers):
-    '''
-    :param data_dir:
-    :param imgset_name: train.txt or val.txt or test.txt or 'car_*.txt'
-    :param category_names: a list that contains category english name, or a dict contains {'a_category_name', a_category_int_id, ...}
-    :return: type: list  -> [absolute_img_path, annotation_list : [ (category_id, xmin, ymin, xmax, ymax), (category_id, xmin, ymin, xmax, ymax), ... ] ]
-    '''
-
-    # if not specific (int) category index for category english name, then generate category_names_idx_map
-    category_names_idx_map = category_names if isinstance(category_names, dict) else {name : idx for idx, name in enumerate(category_names)}
-
-    # VOC standard folder path
-    imageSets_dir = os.path.join(data_dir, 'ImageSets', 'Main')
-    JPEGImages_dir = os.path.join(data_dir, 'JPEGImages')
-    annotations_dir = os.path.join(data_dir, 'Annotations')
-
-    # Load image ids from imageSets
-    imgset_pathes = glob(os.path.join(imageSets_dir, imgset_name))
-    img_ids = []
-    for imgset_path in imgset_pathes:
-        with open(imgset_path, 'r') as f:
-            lines = f.readlines()
-        for line in lines:
-            img_ids.append(line.strip().split()[0].strip())
-
-    # initial multiprocessing
-    manager = multiprocessing.Manager()
-    return_list = manager.list()
-    pool = multiprocessing.Pool(max(1, num_workers))
-    for img_id in img_ids:
-        img_path = os.path.join(JPEGImages_dir, f'{img_id}.jpg')
-        annotation_path = os.path.join(annotations_dir, f'{img_id}.xml')
-        pool.apply_async(load_voc_annotation, args=(annotation_path, img_path, category_names_idx_map, return_list))
-    pool.close()
-    pool.join()
-
-    return return_list
-
-def create_dataloader(data_dir, imgset_name, category_names, batch_size, num_workers=0, shuffle=True, pin_memory=True, drop_last=False, input_size=640, num_classes=80, max_det=200, cache_dir='./cache_dir', use_cache=False):
-
-
-    if num_workers > 0 and num_workers < 1:
+    if num_workers >= 0 and num_workers <= 1:
         num_workers = min(int(multiprocessing.cpu_count() * num_workers), int(multiprocessing.cpu_count()))
-
-    '''
-    samples : a list:
-                [
-                    [absolute_img_path1, [(category_id, xmin, ymin, xmax, ymax), (category_id, xmin, ymin, xmax, ymax), ...]],
-                    [absolute_img_path2, [(category_id, xmin, ymin, xmax, ymax), (category_id, xmin, ymin, xmax, ymax), ...]],
-                    ...
-                ]
-    '''
-    if use_cache:
-        with open(os.path.join(cache_dir, imgset_name), 'r') as f:
-            samples = eval(f.read())
     else:
-        samples = load_voc(data_dir, imgset_name, category_names, num_workers)
-        with open(os.path.join(cache_dir, imgset_name), 'w') as f:
-            f.write(str(samples))
-
-
-    dataset = BaseDataset(samples, input_size, num_classes, max_det)
+        raise Exception(f"num_works must be 0 or in range [0, 1]")
 
     loader = DataLoader(
                 dataset=dataset,
@@ -213,6 +150,24 @@ def create_dataloader(data_dir, imgset_name, category_names, batch_size, num_wor
             )
 
     return loader
+
+def show_dataset(prefix, data_dir, category_names):
+    samples = load_samples(data_dir, prefix)
+
+    for sample in samples:
+        img_path = sample[0]
+        img = cv2.imread(img_path)
+
+        labels = sample[1]
+
+        from fastvision.detection.plot import draw_box_label
+        for label in labels:
+            category_idx, xmin, ymin, xmax, ymax = label
+            draw_box_label(img, (int(xmin), int(ymin), int(xmax), int(ymax)), text=category_names[int(category_idx)], line_color=int(category_idx))
+
+        cv2.imshow('img', img)
+        cv2.waitKey(0)
+
 
 
 

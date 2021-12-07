@@ -13,7 +13,7 @@ def draw_box_label(image, box, text='', line_width=2, line_color=(128, 128, 128)
     :param box: xyxy
     :param text:
     :param line_width:
-    :param line_color:
+    :param line_color: int or BGR color
     :param font_size:
     :param font_color:
     :param bgr:

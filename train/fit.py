@@ -82,7 +82,7 @@ class Fit():
         match_idx_x, match_idx_y = torch.where((iou_between_target_and_predict >= iouv[0]) & (target_cls.view(-1, 1) == predict_cls.view(1, -1)))  # IoU above threshold and classes match
         num_matches = len(match_idx_x)
 
-        correct = torch.zeros([predict_cls.size(0), iouv.size(0)], dtype=torch.bool).to(self.device)
+        correct = torch.zeros([predict_cls.size(0), iouv.size(0)], dtype=torch.bool)
 
         if num_matches:
             matches_idx = torch.stack([match_idx_x, match_idx_y], 1)
@@ -163,10 +163,7 @@ class Fit():
 
         jdict, stats, ap, ap_class = [], [], [], []
 
-        for batch_idx, (images, labels) in enumerate(self.val_loader):
-
-            if batch_idx == 2:
-                break
+        for batch_idx, (images, labels) in enumerate(tqdm(self.val_loader)):
 
             if self.device.type == 'cuda':
                 images = images.cuda(non_blocking=True)
@@ -186,28 +183,30 @@ class Fit():
                 target = labels[labels[:, 0] == img_idx, ...]
                 num_target = len(target)
 
-                if num_target:
+                if num_target and num_predict:
                     target_cls = target[:, 1]
                     target_xywh = target[:, 2:]
                     target_xyxy = xywh2xyxy(target_xywh)
-                    correct = self.process_batch(target_cls, target_xyxy, predict_conf.detach(), predict_cls.detach(), predict_xyxy.detach(), iouv)
+                    correct = self.process_batch(target_cls.cpu(), target_xyxy.cpu(), predict_conf.detach().cpu(), predict_cls.detach().cpu(), predict_xyxy.detach().cpu(), iouv.cpu())
                 else:
-                    target_cls = torch.Tensor().to(self.device)
+                    target_cls = torch.Tensor()
+                    predict_conf = torch.Tensor()
+                    predict_cls = torch.Tensor()
                     correct = torch.zeros(num_predict, iouv.size(0), dtype=torch.bool)
 
                 stats.append((correct, predict_conf.detach(), predict_cls.detach(), target_cls))  # (correct, conf, pcls, tcls)
 
-        all_correct = np.concatenate([x[0] for x in stats], axis=0)
-        all_predict_conf = np.concatenate([x[1] for x in stats], axis=0)
-        all_predict_cls = np.concatenate([x[2] for x in stats], axis=0)
-        all_target_cls = np.concatenate([x[3] for x in stats], axis=0)
+        all_correct = np.concatenate([x[0].cpu() for x in stats], axis=0)
+        all_predict_conf = np.concatenate([x[1].cpu() for x in stats], axis=0)
+        all_predict_cls = np.concatenate([x[2].cpu() for x in stats], axis=0)
+        all_target_cls = np.concatenate([x[3].cpu() for x in stats], axis=0)
 
         ap_under_each_iou = self.ap_per_class(all_correct, all_predict_conf, all_predict_cls, all_target_cls) # [detected classes, 10] not all classes
 
-        map_each_cls = np.mean(ap_under_each_iou, axis=0)
-        map_each_iou = np.mean(ap_under_each_iou, axis=1)
+        map_each_iou = np.mean(ap_under_each_iou, axis=0)
+        map_each_cls = np.mean(ap_under_each_iou, axis=1)
 
         map_05_95 = np.mean(map_each_iou)
 
+        print(map_each_iou)
         print(map_05_95)
-

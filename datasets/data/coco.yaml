@@ -1,10 +1,7 @@
-data_root: 'S:\coco2017'
-train_dir: 'train2017'
-train_id_file: 'instances_train2017.json'
-val_dir: 'val2017'
-val_id_file: 'instances_val2017.json'
-test_dir: 'val2017'
-test_id_file: 'instances_val2017.json'
+data_root: 'S:\datasets\coco2017'
+train_dir: 'train'
+val_dir: 'val'
+test_dir: ''
 num_classes: 80
 categories: [ 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
               'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
