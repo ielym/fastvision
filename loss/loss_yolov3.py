@@ -6,7 +6,7 @@ from .classification_loss import CrossEntropyLoss, BiCrossEntropyLoss
 
 class Yolov3Loss(nn.Module):
 
-    def __init__(self, model, iou_negative_thres):
+    def __init__(self, model, iou_negative_thres, ratio_box, ratio_conf, ratio_cls):
         super(Yolov3Loss, self).__init__()
         if isinstance(model, torch.nn.DataParallel):
             model = model.module
@@ -19,6 +19,10 @@ class Yolov3Loss(nn.Module):
         self.iou_negative_thres = iou_negative_thres
 
         self.binary_cross_entropy_loss = BiCrossEntropyLoss(reduction='mean')
+
+        self.ratio_box = ratio_box
+        self.ratio_conf = ratio_conf
+        self.ratio_cls = ratio_cls
 
     def forward(self, y_pred, y_true):
         '''
@@ -57,9 +61,9 @@ class Yolov3Loss(nn.Module):
             predict_conf = pre[..., 4:5].sigmoid()
             loss_conf += self.binary_cross_entropy_loss(predict_conf.view(-1, 1), targets_conf.view(-1, 1), already_sigmoid=True)
 
-        loss_box *= 0.05
-        loss_conf *= 1.0
-        loss_cls *= 0.5
+        loss_box *= self.ratio_box
+        loss_conf *= self.ratio_conf
+        loss_cls *= self.ratio_cls
 
         return loss_box + loss_conf + loss_cls
 

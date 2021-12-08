@@ -5,7 +5,6 @@ import tqdm
 
 import numpy as np
 import cv2
-import xml.etree.ElementTree as ET
 import multiprocessing
 
 import torch
@@ -14,6 +13,8 @@ from torch.utils.data import DataLoader, Dataset, distributed
 from .common.augmentation import Augmentation, HorizontalFlip, VerticalFlip, Normalization
 from .common.padding import Padding
 from ..detection.tools import xyxy2xywhn, xyxy2xywh
+from fastvision.detection.plot import draw_box_label
+
 
 class BaseDataset(Dataset):
     def __init__(self, samples, input_size, max_det):
@@ -33,8 +34,8 @@ class BaseDataset(Dataset):
         self.augmentation = Augmentation([
                                 HorizontalFlip(p=0.5),
                                 VerticalFlip(p=0.1),
-                                Normalization(Augmentation.imagenetNorm(mode='rgb'), p=1.0),
-                            ])
+                                Normalization(means_stds=Augmentation.imagenetNorm(mode='rgb'), p=1.0),
+                            ], mode='detect')
 
     def __len__(self):
         return len(self.samples)
@@ -80,11 +81,9 @@ class BaseDataset(Dataset):
         # ======================================== process label ========================================
         ori_label = np.array(annotations, dtype=np.float32).reshape([-1, 5])
         label = self.preprocess_labels(ori_label, resized_ratio_hw, padding_position)
+        label[:, 1:] = xyxy2xywhn(label[:, 1:], heigth=self.input_height, width=self.input_width)
 
-
-        if len(label):
-            label[:, 1:] = xyxy2xywhn(label[:, 1:], heigth=self.input_height, width=self.input_width)
-            img, label[:, 1:] = self.augmentation(img, label[:, 1:])
+        img, label[:, 1:] = self.augmentation(img, label[:, 1:])
 
         labels_out = torch.zeros([len(label), 6], dtype=torch.float32)
         labels_out[:, 1:] = torch.from_numpy(label)
@@ -103,40 +102,63 @@ class BaseDataset(Dataset):
             l[:, 0] = i  # add target image index for build_targets()
         return torch.stack(img, 0), torch.cat(label, 0)
 
-def load_samples(data_dir, prefix):
+def _load_samples(img_name, images_dir, labels_dir, samples):
+    img_id = img_name.split('.')[0]
+
+    image_path = os.path.join(images_dir, img_name)
+    label_path = os.path.join(labels_dir, f'{img_id}.txt')
+
+    with open(label_path, 'r') as f:
+        lines = f.readlines()
+
+    labels = []
+    for line in lines:
+        category_id, xmin, ymin, xmax, ymax = line.strip().split()
+        labels.append((float(category_id), float(xmin), float(ymin), float(xmax), float(ymax)))
+    samples.append((image_path, labels))
+
+def load_samples(data_dir, prefix, num_workers, cache, use_cache):
+
+    if use_cache:
+        with open(os.path.join(cache, f'{prefix}.txt'), 'r') as f:
+            samples = eval(f.read())
+
+        print(f'Use {prefix} data from cache {cache} {prefix}.txt')
+        return samples
 
     images_dir = os.path.join(data_dir, 'images')
     labels_dir = os.path.join(data_dir, 'labels')
 
     img_names = os.listdir(images_dir)
 
-    samples = []
-    for img_name in tqdm.tqdm(img_names, desc=f'Extract {prefix} dataset '):
-        img_id = img_name.split('.')[0]
+    pool = multiprocessing.Pool(max(num_workers, 1))
+    mgr = multiprocessing.Manager()
+    samples = mgr.list()
 
-        image_path = os.path.join(images_dir, img_name)
-        label_path = os.path.join(labels_dir, f'{img_id}.txt')
+    # ------------- tqdm with multiprocessing -------------
+    pbar = tqdm.tqdm(total=len(img_names))
+    pbar.set_description(f'Extract {prefix} dataset ')
+    update_tqdm = lambda *args: pbar.update()
+    # -----------------------------------------------------
+    for img_name in img_names:
+        pool.apply_async(_load_samples, args=(img_name, images_dir, labels_dir, samples, ), callback=update_tqdm)
 
-        with open(label_path, 'r') as f:
-            lines = f.readlines()
+    pool.close()
+    pool.join()
+    pbar.close()
 
-        labels = []
-        for line in lines:
-            category_id, xmin, ymin, xmax, ymax = line.strip().split()
-            labels.append((float(category_id), float(xmin), float(ymin), float(xmax), float(ymax)))
-        samples.append((image_path, labels))
+    if cache:
+        with open(os.path.join(cache, f'{prefix}.txt'), 'w') as f:
+            f.write(str(samples))
+        print(f'Save {prefix} data to cache {cache} {prefix}.txt')
+
     return samples
 
-def create_dataloader(prefix, data_dir, batch_size, input_size, num_workers=0, shuffle=True, pin_memory=True, drop_last=False, max_det=200):
+def create_dataloader(prefix, data_dir, batch_size, input_size, device, num_workers=0, cache='./cache', use_cache=False, shuffle=True, pin_memory=True, drop_last=False, max_det=200):
 
-    samples = load_samples(data_dir, prefix)
+    samples = load_samples(data_dir, prefix, num_workers, cache, use_cache)
 
     dataset = BaseDataset(samples, input_size, max_det)
-
-    if num_workers >= 0 and num_workers <= 1:
-        num_workers = min(int(multiprocessing.cpu_count() * num_workers), int(multiprocessing.cpu_count()))
-    else:
-        raise Exception(f"num_works must be 0 or in range [0, 1]")
 
     loader = DataLoader(
                 dataset=dataset,
@@ -145,14 +167,14 @@ def create_dataloader(prefix, data_dir, batch_size, input_size, num_workers=0, s
                 pin_memory=pin_memory,
                 # sampler=distributed.DistributedSampler(datasets, shuffle=shuffle),
                 drop_last=drop_last,
-                num_workers=num_workers,
+                num_workers=num_workers if device.type != 'cpu' else 0,
                 collate_fn=BaseDataset.collate_fn,
             )
 
     return loader
 
-def show_dataset(prefix, data_dir, category_names):
-    samples = load_samples(data_dir, prefix)
+def show_dataset(prefix, data_dir, category_names, num_workers, cache, use_cache):
+    samples = load_samples(data_dir, prefix, num_workers, cache, use_cache)
 
     for sample in samples:
         img_path = sample[0]
@@ -160,7 +182,6 @@ def show_dataset(prefix, data_dir, category_names):
 
         labels = sample[1]
 
-        from fastvision.detection.plot import draw_box_label
         for label in labels:
             category_idx, xmin, ymin, xmax, ymax = label
             draw_box_label(img, (int(xmin), int(ymin), int(xmax), int(ymax)), text=category_names[int(category_idx)], line_color=int(category_idx))

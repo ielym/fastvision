@@ -1,8 +1,16 @@
 import numpy as np
+import functools
+from functools import wraps
+import random
 
 class Augmentation():
-    def __init__(self, augmentations):
+    def __init__(self, augmentations:list, mode='classification'):
+        '''
+        :param augmentations: list
+        :param mode: classification detect
+        '''
         self.augmentations = augmentations
+        self.mode = mode
 
     @classmethod
     def imagenetNorm(cls, mode='rgb'):
@@ -16,82 +24,85 @@ class Augmentation():
 
     def __call__(self, img, label=None):
 
-        has_label = True
-        if isinstance(label, type(None)):
-            has_label = False
-
         for func in self.augmentations:
-            if has_label:
-                img, label = func(img, label)
+            if self.mode == 'detect':
+                img, label = func(img, label, mode=self.mode)
             else:
-                img = func(img)
-        if has_label:
+                img = func(img, mode=self.mode)
+
+        if self.mode == 'detect':
             return img, label
         return img
 
-import random
-def HorizontalFlip(p=1.0):
-    def call(img, label=None):
+class HorizontalFlip():
+
+    def __init__(self, p=1.0):
+        self.p = p
+
+    def __call__(self, img, label=None, mode='classification'):
         '''
         :param img:
         :param label: [x_center, y_center, width, height]
         :return:
         '''
-        has_label = True
-        if isinstance(label, type(None)):
-            has_label = False
+        execute = (random.random() <= self.p)
 
-        if random.random() <= p:
+        if execute:
             img = np.fliplr(img)
-            if has_label:
-                base = 1 if (label[0, 2] < 1 and label[0, 3] <1) else img.shape[1]
-                label[:, 0] = base - label[:, 0]
-                return img, label
-            return img
-        else:
-            if has_label:
-                return img, label
-            return img
-    return call
 
-def VerticalFlip(p=1.0):
-    def call(img, label=None):
+        if execute and mode == 'detect':
+            base = 1 if (label[0, 2] < 1 and label[0, 3] <1) else img.shape[1]
+            label[:, 0] = base - label[:, 0]
+
+        if mode == 'detect':
+            return img, label
+        return img
+
+class VerticalFlip():
+
+    def __init__(self, p=1.0):
+        self.p = p
+
+    def __call__(self, img, label=None, mode='classification'):
         '''
         :param img:
         :param label: [x_center, y_center, width, height]
         :return:
         '''
-        has_label = True
-        if isinstance(label, type(None)):
-            has_label = False
+        execute = (random.random() <= self.p)
 
-        if random.random() <= p:
+        if execute:
             img = np.flipud(img)
-            if has_label:
-                base = 1 if (label[0, 2] < 1 and label[0, 3] <1) else img.shape[1]
-                label[:, 1] = base - label[:, 1]
-                return img, label
-            return img
-        else:
-            if has_label:
-                return img, label
-            return img
-    return call
 
-def Normalization(means_stds=None, p=1.0):
-    if isinstance(means_stds, type(None)):
-        means = np.array([0., 0., 0.], dtype=np.float32).reshape([1, 1, 3])
-        stds = np.array([1., 1., 1.], dtype=np.float32).reshape([1, 1, 3])
-        means_stds = (means, stds)
+        if execute and mode == 'detect':
+            base = 1 if (label[0, 2] < 1 and label[0, 3] <1) else img.shape[1]
+            label[:, 1] = base - label[:, 1]
 
-    def call(img, label=None):
-        has_label = True
-        if isinstance(label, type(None)):
-            has_label = False
-        if random.random() <= p:
-            img = img / 255.
-            img = (img - means_stds[0]) / means_stds[1]
-        if has_label:
+        if mode == 'detect':
             return img, label
         return img
-    return call
+
+class Normalization():
+
+    def __init__(self, means_stds=None, p=1.0):
+
+        self.p = p
+
+        if isinstance(means_stds, type(None)):
+            means = np.array([0., 0., 0.], dtype=np.float32).reshape([1, 1, 3])
+            stds = np.array([1., 1., 1.], dtype=np.float32).reshape([1, 1, 3])
+            self.means_stds = (means, stds)
+        else:
+            self.means_stds = means_stds
+
+    def __call__(self, img, label=None, mode='classification'):
+
+        execute = (random.random() <= self.p)
+
+        if execute:
+            img = img / 255.
+            img = (img - self.means_stds[0]) / self.means_stds[1]
+
+        if mode == 'detect':
+            return img, label
+        return img

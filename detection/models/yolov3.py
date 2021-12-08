@@ -40,8 +40,11 @@ class Yolov3(nn.Module):
                 offset_level = torch.tensor(offset(height, width, mode='yx')).to(out)
                 offset_level = offset_level.expand_as(out[..., 0:2])
 
-                xy = (out[..., 0:2] * 2 - 0.5 + offset_level) * self.backbone_strides_per_level[i]  # xy
-                wh = (out[..., 2:4] * 2) ** 2 * self.anchors_per_level[i].expand_as(out[..., 2:4])  # wh
+                # xy = (out[..., 0:2] * 2 - 0.5 + offset_level) * self.backbone_strides_per_level[i]  # xy
+                # wh = (out[..., 2:4] * 2) ** 2 * self.anchors_per_level[i].expand_as(out[..., 2:4])  # wh
+
+                xy = (out[..., 0:2].sigmoid() + offset_level) * self.backbone_strides_per_level[i]  # xy
+                wh = torch.exp(out[..., 2:4]) * self.anchors_per_level[i].expand_as(out[..., 2:4])  # wh
 
                 out = torch.cat((xy, wh, out[..., 4:]), -1)
                 results.append(out.view(bs, -1, self.num_classes + 5))
