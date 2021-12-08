@@ -6,7 +6,7 @@ from .classification_loss import CrossEntropyLoss, BiCrossEntropyLoss
 
 class Yolov3Loss(nn.Module):
 
-    def __init__(self, model, iou_negative_thres):
+    def __init__(self, model, iou_negative_thres, ratio_box, ratio_conf, ratio_cls):
         super(Yolov3Loss, self).__init__()
         if isinstance(model, torch.nn.DataParallel):
             model = model.module
@@ -20,12 +20,21 @@ class Yolov3Loss(nn.Module):
 
         self.binary_cross_entropy_loss = BiCrossEntropyLoss(reduction='mean')
 
-    def forward(self, y_pre, y_true):
-        gt_locations, gt_categories, gt_xywh, matched_anchors = self.build_target(y_pre, y_true)
+        self.ratio_box = ratio_box
+        self.ratio_conf = ratio_conf
+        self.ratio_cls = ratio_cls
 
-        loss_cls, loss_box, loss_conf = torch.zeros(1).to(y_pre[0]), torch.zeros(1).to(y_pre[0]), torch.zeros(1).to(y_pre[0])
+    def forward(self, y_pred, y_true):
+        '''
+        :param y_pred:
+        :param y_true:
+        :return:
+        '''
+        gt_locations, gt_categories, gt_xywh, matched_anchors = self.build_target(y_pred, y_true)
 
-        for layer_idx, pre in enumerate(y_pre):
+        loss_cls, loss_box, loss_conf = torch.zeros(1).to(y_pred[0]), torch.zeros(1).to(y_pred[0]), torch.zeros(1).to(y_pred[0])
+
+        for layer_idx, pre in enumerate(y_pred):
 
             # torch.Size([9]) torch.Size([9, 2]) torch.Size([9])
             select_target_batch_idx, select_target_grid_xy, select_target_anchor_idx = gt_locations[layer_idx]
@@ -52,16 +61,16 @@ class Yolov3Loss(nn.Module):
             predict_conf = pre[..., 4:5].sigmoid()
             loss_conf += self.binary_cross_entropy_loss(predict_conf.view(-1, 1), targets_conf.view(-1, 1), already_sigmoid=True)
 
-        loss_box *= 0.05
-        loss_conf *= 1.0
-        loss_cls *= 0.5
+        loss_box *= self.ratio_box
+        loss_conf *= self.ratio_conf
+        loss_cls *= self.ratio_cls
 
         return loss_box + loss_conf + loss_cls
 
 
-    def build_target(self, y_pre, y_true):
+    def build_target(self, y_pred, y_true):
         '''
-        :param y_pre: torch.Size([2, 3, 20, 15, 25]) torch.Size([2, 3, 20, 15, 25]) torch.Size([2, 3, 80, 60, 25]) image: (3, 640, 480)
+        :param y_pred: torch.Size([2, 3, 20, 15, 25]) torch.Size([2, 3, 20, 15, 25]) torch.Size([2, 3, 80, 60, 25]) image: (3, 640, 480)
         :param y_true: torch.Size([4, 6]) [batch_idx, category_idx, x_center, y_center, w, h] normalization size
         :return:
         '''
@@ -71,7 +80,7 @@ class Yolov3Loss(nn.Module):
         gt_xywh = []
         matched_anchors = []
 
-        for layer_idx, pre in enumerate(y_pre):
+        for layer_idx, pre in enumerate(y_pred):
             anchors = self.anchor_levels[layer_idx].squeeze() # torch.Size([3, 2]) torch.Size([3, 2]) torch.Size([3, 2]) image size
             anchors = anchors / self.backbone_stride_levels[layer_idx] # feature size
             num_anchors = anchors.size(0)

@@ -26,13 +26,13 @@ class Yolov3(nn.Module):
 
         self.head = head(feature_channels=self.backbone_channels_per_level, num_levels=len(self.backbone_channels_per_level), num_anchors_per_level=num_anchors_per_level, num_classes=num_classes)
 
-    def forward(self, images):
+    def forward(self, images, val=False):
         backbone_out = self.backbone(images)
         neck_out = self.neck(backbone_out)
         head_out = self.head(neck_out)
 
         results = []
-        if not self.training:
+        if (self.training == False or val == True):
             for i in range(len(head_out)):
                 out = head_out[i].sigmoid()
                 bs, num_anchors, height, width, _ = out.size()
@@ -40,13 +40,18 @@ class Yolov3(nn.Module):
                 offset_level = torch.tensor(offset(height, width, mode='yx')).to(out)
                 offset_level = offset_level.expand_as(out[..., 0:2])
 
-                xy = (out[..., 0:2] * 2 - 0.5 + offset_level) * self.backbone_strides_per_level[i]  # xy
-                wh = (out[..., 2:4] * 2) ** 2 * self.anchors_per_level[i].expand_as(out[..., 2:4])  # wh
+                # xy = (out[..., 0:2] * 2 - 0.5 + offset_level) * self.backbone_strides_per_level[i]  # xy
+                # wh = (out[..., 2:4] * 2) ** 2 * self.anchors_per_level[i].expand_as(out[..., 2:4])  # wh
+
+                xy = (out[..., 0:2].sigmoid() + offset_level) * self.backbone_strides_per_level[i]  # xy
+                wh = torch.exp(out[..., 2:4]) * self.anchors_per_level[i].expand_as(out[..., 2:4])  # wh
 
                 out = torch.cat((xy, wh, out[..., 4:]), -1)
                 results.append(out.view(bs, -1, self.num_classes + 5))
             results = torch.cat(results, 1)
-        return head_out if self.training else results
+
+            return (head_out, results)
+        return head_out
 
 
 def yolov3(backbone=None, neck=None, head=None, anchors=None, num_anchors_per_level=None, in_channels=3, num_classes=80, training=False):

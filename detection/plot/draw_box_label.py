@@ -8,6 +8,17 @@ plt.rcParams['font.sans-serif'] = ['FangSong']
 plt.rcParams['axes.unicode_minus']=False
 
 def draw_box_label(image, box, text='', line_width=2, line_color=(128, 128, 128), font_size=1, font_color=(255, 255, 255), bgr=True):
+    '''
+    :param image:
+    :param box: xyxy
+    :param text:
+    :param line_width:
+    :param line_color: int or BGR color
+    :param font_size:
+    :param font_color:
+    :param bgr:
+    :return:
+    '''
     assert isinstance(image, np.ndarray), f'Type of parameter image must be np.ndaary, not {type(image)}'
 
     # if isinstance(font_color, int):
