@@ -20,12 +20,17 @@ class Yolov3Loss(nn.Module):
 
         self.binary_cross_entropy_loss = BiCrossEntropyLoss(reduction='mean')
 
-    def forward(self, y_pre, y_true):
-        gt_locations, gt_categories, gt_xywh, matched_anchors = self.build_target(y_pre, y_true)
+    def forward(self, y_pred, y_true):
+        '''
+        :param y_pred:
+        :param y_true:
+        :return:
+        '''
+        gt_locations, gt_categories, gt_xywh, matched_anchors = self.build_target(y_pred, y_true)
 
-        loss_cls, loss_box, loss_conf = torch.zeros(1).to(y_pre[0]), torch.zeros(1).to(y_pre[0]), torch.zeros(1).to(y_pre[0])
+        loss_cls, loss_box, loss_conf = torch.zeros(1).to(y_pred[0]), torch.zeros(1).to(y_pred[0]), torch.zeros(1).to(y_pred[0])
 
-        for layer_idx, pre in enumerate(y_pre):
+        for layer_idx, pre in enumerate(y_pred):
 
             # torch.Size([9]) torch.Size([9, 2]) torch.Size([9])
             select_target_batch_idx, select_target_grid_xy, select_target_anchor_idx = gt_locations[layer_idx]
@@ -59,9 +64,9 @@ class Yolov3Loss(nn.Module):
         return loss_box + loss_conf + loss_cls
 
 
-    def build_target(self, y_pre, y_true):
+    def build_target(self, y_pred, y_true):
         '''
-        :param y_pre: torch.Size([2, 3, 20, 15, 25]) torch.Size([2, 3, 20, 15, 25]) torch.Size([2, 3, 80, 60, 25]) image: (3, 640, 480)
+        :param y_pred: torch.Size([2, 3, 20, 15, 25]) torch.Size([2, 3, 20, 15, 25]) torch.Size([2, 3, 80, 60, 25]) image: (3, 640, 480)
         :param y_true: torch.Size([4, 6]) [batch_idx, category_idx, x_center, y_center, w, h] normalization size
         :return:
         '''
@@ -71,7 +76,7 @@ class Yolov3Loss(nn.Module):
         gt_xywh = []
         matched_anchors = []
 
-        for layer_idx, pre in enumerate(y_pre):
+        for layer_idx, pre in enumerate(y_pred):
             anchors = self.anchor_levels[layer_idx].squeeze() # torch.Size([3, 2]) torch.Size([3, 2]) torch.Size([3, 2]) image size
             anchors = anchors / self.backbone_stride_levels[layer_idx] # feature size
             num_anchors = anchors.size(0)

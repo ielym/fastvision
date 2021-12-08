@@ -8,7 +8,7 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, max_det=300
     prediction = prediction[conf_mask]
 
     if not prediction.size(0):
-        return [], [], []
+        return torch.Tensor().view(-1, 1), torch.Tensor().view(-1, 1), torch.Tensor().view(-1, 4)
 
     prediction[:, 5:] *= prediction[:, 4:5]
     boxes = xywh2xyxy(prediction[:, :4])
@@ -20,4 +20,4 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, max_det=300
     categories = categories[nms_mask]
     boxes = boxes[nms_mask, :]
 
-    return scores[:max_det], categories[:max_det], boxes[:max_det]
+    return scores[:max_det].view(-1, 1), categories[:max_det].view(-1, 1), boxes[:max_det].view(-1, 4)
