@@ -431,7 +431,7 @@ def CIOU(box1, box2, mode='xyxy', eps=1e-7):
         width2 = box2[:, 2] - box2[:, 0]
         height2 = box2[:, 3] - box2[:, 1]
 
-        v = (4 / math.pi ** 2) * torch.pow(torch.arctan(width2 / (height2 + eps)) - torch.arctan((width1 / (height1 + eps))), 2)
+        v = (4 / math.pi ** 2) * torch.pow(torch.atan(width2 / (height2 + eps)) - torch.atan((width1 / (height1 + eps))), 2)
         v = v.view(-1, 1)
         with torch.no_grad():
             alpha = v / (v - iou + (1 + eps))
