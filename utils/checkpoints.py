@@ -5,8 +5,8 @@ import os
 def LoadFromSingle(model, weights, strict=False):
     try:
         weights_dict = torch.load(weights)
-    except:
         # torch.save(weights_dict, "yolov3-nonzip.pth", _use_new_zipfile_serialization=False)
+    except:
         head, tail = os.path.split(weights)
 
         tail_split = tail.split('.')

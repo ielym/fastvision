@@ -37,14 +37,15 @@ parser.add_argument('--ratio_cls', default=0.5, type=float, help='')
 
 
 # Train
-parser.add_argument('--device', default='0', type=str, help='cpu, or 0, 1 or 0')
+parser.add_argument('--device', default='cpu', type=str, help='cpu, or 0, 1 or 0')
 parser.add_argument('--epochs', default=300, type=int, help='')
-parser.add_argument('--batch_size', default=4, type=int, help='')
+parser.add_argument('--batch_size', default=2, type=int, help='')
 parser.add_argument('--learning_rate', default=1e-3, type=float, help='')
 parser.add_argument('--weight_decay', default=5e-4, type=float, help='')
 parser.add_argument('--num_workers', default=0.3, type=float, help='')
 parser.add_argument('--seed', default=2021, type=int, help='0/1/2/... or None')
 parser.add_argument('--DataParallel', default=True, type=bool, help='')
+parser.add_argument('--DistributedDataParallel', default=False, type=bool, help='')
 parser.add_argument('--SyncBatchNorm', default=True, type=bool, help='')
 
 # cache
