@@ -46,11 +46,12 @@ def anchor_fn(data_loaders:list, num_anchors:int, num_workers, device, cache, us
 
 def optimizer_fn(model, lr, weight_decay):
 
+
     g0, g1, g2 = [], [], []  # optimizer parameter groups
     for v in model.modules():
         if hasattr(v, 'bias') and isinstance(v.bias, nn.Parameter):  # bias
             g2.append(v.bias)
-        if isinstance(v, nn.BatchNorm2d):  # weight (no decay)
+        if isinstance(v, (nn.BatchNorm2d, nn.SyncBatchNorm)):  # weight (no decay)
             g0.append(v.weight)
         elif hasattr(v, 'weight') and isinstance(v.weight, nn.Parameter):  # weight (with decay)
             g1.append(v.weight)
@@ -61,7 +62,7 @@ def optimizer_fn(model, lr, weight_decay):
 
     return optimizer
 
-def model_fn(weights, in_channels, num_classes, num_anchors_per_level, device, anchors, DataParallel=False, SyncBatchNorm=False, training=True):
+def model_fn(weights, in_channels, num_classes, num_anchors_per_level, device, anchors, DataParallel=False, DistributedDataParallel=False, SyncBatchNorm=False, training=True):
     from fastvision.classfication.models import darknet53
     from fastvision.detection.neck import yolov3neck
     from fastvision.detection.head import yolov3head
@@ -80,7 +81,7 @@ def model_fn(weights, in_channels, num_classes, num_anchors_per_level, device, a
         print('Model : using DataParallel')
         model = nn.DataParallel(model)
 
-    if device.type == 'cuda' and SyncBatchNorm:
+    if device.type == 'cuda' and DistributedDataParallel and SyncBatchNorm:
         print('Model : using SyncBatchNorm')
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
 
@@ -106,7 +107,7 @@ def Train(args, device):
 
     # ======================= Model ============================
     num_classes = data_dict['num_classes']
-    model = model_fn(args.pretrained_weights, args.in_channels, num_classes, args.num_anchors_per_level, anchors=anchors, training=args.training, device=device)
+    model = model_fn(args.pretrained_weights, args.in_channels, num_classes, args.num_anchors_per_level, anchors=anchors, training=args.training, device=device, DataParallel=args.DataParallel, DistributedDataParallel=args.DistributedDataParallel, SyncBatchNorm=args.SyncBatchNorm)
 
     # ======================= Loss ============================
     loss = Yolov3Loss(model=model, iou_negative_thres=args.iou_negative_thres, ratio_box=args.ratio_box, ratio_conf=args.ratio_conf, ratio_cls=args.ratio_cls)

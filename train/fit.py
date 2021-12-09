@@ -79,14 +79,14 @@ class Fit():
                     # calculate map
                     for img_idx in range(images.size(0)):
                         predict_conf, predict_cls, predict_xyxy = non_max_suppression(results[img_idx, ...], conf_thres=0.25, iou_thres=0.45, max_det=300)
-                        predict = torch.cat([predict_cls, predict_conf, predict_xyxy], dim=1)
+                        predict = torch.cat([predict_cls.float(), predict_conf, predict_xyxy], dim=1)
 
                         target = labels[labels[:, 0] == img_idx, 1:]
                         target[:, 1:] = xywh2xyxy(target[:, 1:]) * torch.tensor(images.size()).to(target)[[3, 2, 3, 2]]
 
                         map_est.process_one(predict, target)
 
-                map_each_iou, map_each_cls, map_each_cls_idx = map_est.fetch()
+                    map_each_iou, map_each_cls, map_each_cls_idx = map_est.fetch()
 
                 print(f'loss : {loss.item()} map : {map_each_iou}')
                 # for cls_map, cls_idx in zip(map_each_cls, map_each_cls_idx):
@@ -95,31 +95,6 @@ class Fit():
 
     def _test(self):
 
-        map_est = CalculateMAP(map_iou_values=np.linspace(0.5, 0.95, 10))
-
-        for batch_idx, (images, labels) in enumerate(tqdm(self.val_loader)):
-
-            if self.device.type == 'cuda':
-                images = images.cuda(non_blocking=True)
-                labels = labels.cuda(non_blocking=True)
-
-            head_out, results = self.model(images, val=True)
-
-            # calculate map
-            for img_idx in range(images.size(0)):
-                predict_conf, predict_cls, predict_xyxy = non_max_suppression(results[img_idx, ...], conf_thres=0.25, iou_thres=0.45, max_det=300)
-                predict = torch.cat([predict_cls, predict_conf, predict_xyxy], dim=1)
-
-                target = labels[labels[:, 0] == img_idx, 1:]
-                target[:, 1:] = xywh2xyxy(target[:, 1:]) * torch.tensor(images.size()).to(target)[[3, 2, 3, 2]]
-
-                map_est.process_one(predict, target)
-
-        map_each_iou, map_each_cls, map_each_cls_idx = map_est.fetch()
-        map_50 = map_each_iou[0]
-
-        print(map_each_iou)
-        for cls_map, cls_idx in zip(map_each_cls, map_each_cls_idx):
-            print(self.category_names[cls_idx], cls_map)
+        pass
 
 
