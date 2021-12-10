@@ -7,9 +7,10 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 
 from fastvision.datasets.detection_dataloader import create_dataloader, show_dataset
 from fastvision.detection.tools import AnchorGenerator
-from fastvision.utils.checkpoints import LoadFromSingle, LoadFromParrel
+from fastvision.utils.checkpoints import LoadStatedict
 from fastvision.loss import Yolov3Loss
-from fastvision.train import Fit
+from fastvision.utils import Fit
+from fastvision.utils.sheduler import CosineLR, LinearLR
 
 def dataloader_fn(data_yaml, batch_size, num_workers, input_size, max_det, device, cache, use_cache):
     data_dict = yaml.safe_load(open(data_yaml, 'r'))
@@ -71,7 +72,7 @@ def model_fn(weights, in_channels, num_classes, num_anchors_per_level, device, a
     model = yolov3(backbone=darknet53, neck=yolov3neck, head=yolov3head, anchors=anchors, num_anchors_per_level=num_anchors_per_level, in_channels=in_channels, num_classes=num_classes, training=training)
 
     if weights:
-        model = LoadFromSingle(model=model, weights=weights, strict=False)
+        model = LoadStatedict(model=model, weights=weights, strict=False)
 
     if device.type == 'cuda':
         print('Model : using cuda')
@@ -113,11 +114,13 @@ def Train(args, device):
     loss = Yolov3Loss(model=model, iou_negative_thres=args.iou_negative_thres, ratio_box=args.ratio_box, ratio_conf=args.ratio_conf, ratio_cls=args.ratio_cls)
 
     # ======================= Optimizer ============================
-    optimizer = optimizer_fn(model=model, lr=args.learning_rate, weight_decay=args.weight_decay)
+    optimizer = optimizer_fn(model=model, lr=1, weight_decay=args.weight_decay) # here lr have to set to 1
+    scheduler = LinearLR(optimizer=optimizer, steps=args.epochs, initial_lr=args.initial_lr, last_lr=args.last_lr)
 
     est = Fit(
                 model=model,
                 optimizer=optimizer,
+                scheduler=scheduler,
                 loss=loss,
                 start_epoch=0,
                 end_epoch=args.epochs,
