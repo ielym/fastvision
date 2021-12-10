@@ -65,10 +65,10 @@ class Fit():
                 t.set_description(f"Epoch {epoch + 1}")
                 t.set_postfix(batch=batch_idx + 1, loss=loss.item())
 
-                lr_each_param_groups = [x['lr'] for x in self.optimizer.param_groups]
-                print(lr_each_param_groups)
-                self.scheduler.step()
-                print(self.optimizer.state_dict()['param_groups']) # dict_keys(['state', 'param_groups'])
+            # lr_each_param_groups = [x['lr'] for x in self.optimizer.param_groups]
+            # print(lr_each_param_groups)
+            self.scheduler.step()
+            print(self.optimizer.state_dict()['param_groups']) # dict_keys(['state', 'param_groups'])
 
     def _val(self):
 

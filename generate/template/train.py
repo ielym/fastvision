@@ -9,7 +9,7 @@ from fastvision.datasets.detection_dataloader import create_dataloader, show_dat
 from fastvision.detection.tools import AnchorGenerator
 from fastvision.utils.checkpoints import LoadStatedict
 from fastvision.loss import Yolov3Loss
-from fastvision.train import Fit
+from fastvision.utils import Fit
 from fastvision.utils.sheduler import CosineLR, LinearLR
 
 def dataloader_fn(data_yaml, batch_size, num_workers, input_size, max_det, device, cache, use_cache):
