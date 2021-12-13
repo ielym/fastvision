@@ -72,7 +72,7 @@ def model_fn(weights, in_channels, num_classes, num_anchors_per_level, device, a
     model = yolov3(backbone=darknet53, neck=yolov3neck, head=yolov3head, anchors=anchors, num_anchors_per_level=num_anchors_per_level, in_channels=in_channels, num_classes=num_classes, training=training)
 
     if weights:
-        model = LoadStatedict(model=model, weights=weights, strict=False)
+        model = LoadStatedict(model=model, weights=weights, device=device, strict=False)
 
     if device.type == 'cuda':
         print('Model : using cuda')
