@@ -26,7 +26,7 @@ parser.add_argument('--in_channels', default=3, type=int, help='')
 parser.add_argument('--input_size', default=112, type=int, help='')
 parser.add_argument('--clips', default=16, type=int, help='')
 parser.add_argument('--frames_per_clip', default=1, type=int, help='')
-parser.add_argument('--num_workers', default=0.2, type=float, help='')
+parser.add_argument('--num_workers', default=0, type=float, help='')
 
 # Loss
 parser.add_argument('--iou_negative_thres', default=0.5, type=float, help='for selecting response/negative/ignore samples when compute loss')

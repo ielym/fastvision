@@ -42,6 +42,8 @@ class Fit():
         self.model.train()
         with tqdm(self.train_loader) as t:
             for batch_idx, (images, labels) in enumerate(t):
+                print(images.size())
+                continue
                 if self.device.type == 'cuda':
                     images = images.cuda(non_blocking=True)
                     labels = labels.cuda(non_blocking=True)

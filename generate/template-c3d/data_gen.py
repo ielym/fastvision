@@ -35,10 +35,8 @@ class BaseDataset(Dataset):
             self.input_width = input_size[1]
 
         self.augmentation = Augmentation([
-                                # Resize(size=(128, 171), p=1.0),
-                                # RandomCrop(size=112, p=1.0),
-                                Resize(size=(600, 600), p=1.0),
-                                CenterCrop(size=500, p=1.0),
+                                Resize(size=(128, 171), p=1.0),
+                                RandomCrop(size=112, p=1.0),
                                 HorizontalFlip(p=0.5),
                                 # BGR2RGB(p=1.0),
                                 # Normalization(means_stds=Augmentation.imagenetNorm(mode='rgb'), p=1.0),
@@ -61,6 +59,8 @@ class BaseDataset(Dataset):
         video_path = sample[0]
         category_idx = sample[1]
 
+        print(video_path)
+
         # ======================================== process image ========================================
         ori_frames = self.load_video(video_path)
 
@@ -76,20 +76,12 @@ class BaseDataset(Dataset):
         ori_labels = np.array([category_idx], dtype=np.float32).reshape([-1, 1])
         labels = torch.from_numpy(ori_labels)
 
-
         frames = frames.transpose([3, 0, 1, 2])
         frames = np.ascontiguousarray(frames)
         frames = frames.astype(np.float32)
         frames = torch.from_numpy(frames)
 
         return frames, labels
-
-    @staticmethod
-    def collate_fn(batch):
-        img, label = zip(*batch)  # transposed
-        for i, l in enumerate(label):
-            l[:, 0] = i  # add target image index for build_targets()
-        return torch.stack(img, 0), torch.cat(label, 0)
 
 def load_samples(data_dir, prefix, num_workers, cache, use_cache):
 
@@ -132,7 +124,6 @@ def create_dataloader(prefix, data_dir, batch_size, clips, frames_per_clip, inpu
                 # sampler=distributed.DistributedSampler(datasets, shuffle=shuffle),
                 drop_last=drop_last,
                 num_workers=num_workers if device.type != 'cpu' else 0,
-                collate_fn=BaseDataset.collate_fn,
             )
 
     return loader

@@ -3,6 +3,21 @@ import numpy as np
 import random
 import math
 
+def countRealFrames(cap):
+    '''
+    :param cap:
+    :return:
+    Under some unknown situations, cap.get(cv2.CAP_PROP_FRAME_COUNT) != real total frames
+    '''
+    cnt = 0
+    ret, _ = cap.read()
+    print(cap, ret)
+    while ret:
+        cnt += 1
+        ret, _ = cap.read()
+    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    return cnt
+
 def sampleFramesByIndex(cap, idxs):
     '''
     :param cap: cv2.VideoCapture
@@ -26,7 +41,7 @@ def sampleFramesByIndex(cap, idxs):
 
     return np.concatenate(frames, axis=0)
 
-def randomSampling(cap, frames=1):
+def randomSampling(cap, frames=1, TOTAL_FRAMES=None):
     '''
     :param cap: cv2.VideoCapture
     :param nums: sample frame numbers
@@ -34,7 +49,7 @@ def randomSampling(cap, frames=1):
 
     sample from a video by random frame idx
     '''
-    TOTAL_FRAMES = math.floor(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    TOTAL_FRAMES = math.floor(cap.get(cv2.CAP_PROP_FRAME_COUNT)) if not TOTAL_FRAMES else TOTAL_FRAMES
 
     if TOTAL_FRAMES < frames:
         raise Exception("randomSampling TOTAL_FRAMES less than nums")
@@ -44,9 +59,14 @@ def randomSampling(cap, frames=1):
 
     frames = sampleFramesByIndex(cap, sample_idxs)
 
+    if len(frames) != frames:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        real_frames = countRealFrames(cap)
+        frames = randomSampling(cap, frames, real_frames)
+
     return frames
 
-def averageSampling(cap, frames=1):
+def averageSampling(cap, frames=1, TOTAL_FRAMES=None):
     '''
     :param cap: cv2.VideoCapture
     :param nums: sample frame numbers
@@ -54,7 +74,7 @@ def averageSampling(cap, frames=1):
 
     sample from a video by same step
     '''
-    TOTAL_FRAMES = math.floor(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    TOTAL_FRAMES = math.floor(cap.get(cv2.CAP_PROP_FRAME_COUNT)) if not TOTAL_FRAMES else TOTAL_FRAMES
 
     if TOTAL_FRAMES < frames:
         raise Exception("randomSampling TOTAL_FRAMES less than nums")
@@ -64,9 +84,15 @@ def averageSampling(cap, frames=1):
     sample_idxs.sort()
 
     frames = sampleFramesByIndex(cap, sample_idxs)
+
+    if len(frames) != frames:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        real_frames = countRealFrames(cap)
+        frames = averageSampling(cap, frames, real_frames)
+
     return frames
 
-def randomClipSampling(cap, clips=1, frames_per_clip=1):
+def randomClipSampling(cap, clips=1, frames_per_clip=1, TOTAL_FRAMES=None):
     '''
     :param cap: cv2.VideoCapture
     :param nums: sample frame numbers
@@ -74,8 +100,7 @@ def randomClipSampling(cap, clips=1, frames_per_clip=1):
 
     sample from a video, first clip whole video into anverage {nums} frames, then sample a frame from each clip randomly.
     '''
-
-    TOTAL_FRAMES = math.floor(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    TOTAL_FRAMES = math.floor(cap.get(cv2.CAP_PROP_FRAME_COUNT)) if not TOTAL_FRAMES else TOTAL_FRAMES
 
     if TOTAL_FRAMES < clips:
         raise Exception("randomClipSampling clips less than frames")
@@ -95,4 +120,10 @@ def randomClipSampling(cap, clips=1, frames_per_clip=1):
     frames_idxs.sort()
 
     frames = sampleFramesByIndex(cap, frames_idxs)
+
+    if len(frames) != clips * frames_per_clip:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        real_frames = countRealFrames(cap)
+        frames = randomClipSampling(cap, clips, frames_per_clip, real_frames)
+
     return frames
