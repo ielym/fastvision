@@ -3,13 +3,31 @@ from collections import OrderedDict
 import os
 import torch.nn as nn
 from copy import deepcopy
+from datetime import datetime
 
 def is_parallel(model):
     return type(model) in (nn.parallel.DataParallel, nn.parallel.DistributedDataParallel)
 
-def LoadStatedict(model, weights, strict=False):
+def SqueezeModel(model, params, squeeze:bool):
+    '''
+    :param model:
+    :param params: 'all' or list : ['neck', 'head', 'classifier']
+    :param squeeze:
+    :return:
+    '''
+    if params == 'all':
+        for name, value in model.named_parameters():
+            value.requires_grad = squeeze
+    else:
+        for name, value in model.named_parameters():
+            for param in params:
+                if param in name:
+                    value.requires_grad = squeeze
+    return model
+
+def LoadStatedict(model, weights, device, strict=False):
     try:
-        weights_dict = torch.load(weights)
+        weights_dict = torch.load(weights, map_location=device)
         # torch.save(weights_dict, "yolov3-nonzip.pth", _use_new_zipfile_serialization=False)
     except:
         head, tail = os.path.split(weights)
@@ -17,7 +35,10 @@ def LoadStatedict(model, weights, strict=False):
         tail_split = tail.split('.')
         tail = ''.join(tail_split[:-1]) + '-nonzip.' + tail_split[-1]
         weights = os.path.join(head, tail)
-        weights_dict = torch.load(weights)
+        weights_dict = torch.load(weights, map_location=device)
+
+    if 'model' in weights_dict.keys():
+        weights_dict = weights_dict['model']
 
     model_keys = model.state_dict().keys()
 
@@ -29,7 +50,6 @@ def LoadStatedict(model, weights, strict=False):
     model.load_state_dict(useful_keys, strict=strict)
 
     return model
-
 
 def LoadFromParrel(model, weights, strict=False):
     try:
@@ -67,5 +87,4 @@ def SaveModel(ckpt, filename, weights_only=True):
 
 
 
-from datetime import datetime
 

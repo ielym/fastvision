@@ -47,10 +47,10 @@ class C3D(nn.Module):
             self.classifier = nn.Sequential(
                 nn.Linear(self.inplanes * 4 * 4, 4096),
                 activation(),
-                nn.Dropout(),
+                nn.Dropout(p=0.5),
                 nn.Linear(4096, 4096),
                 activation(),
-                nn.Dropout(),
+                nn.Dropout(p=0.5),
                 nn.Linear(4096, num_classes),
             )
 
@@ -109,34 +109,3 @@ def c3d(in_channels=3, num_classes=1000, including_top=True):
 def c3d_bn(in_channels=3, num_classes=1000, including_top=True):
     channels = [64, 128, 256, 512, 512]
     return C3D(in_channels=in_channels, num_classes=num_classes, num_blocks=[1, 1, 2, 2, 2], channels=channels, including_top=including_top, normal=True)
-
-
-# img = torch.zeros([1, 3, 16, 112, 112])
-# model = c3d(in_channels=3, num_classes=487, including_top=True)
-# out = model(img)
-# print(out.size())
-
-# model_state_dict = model.state_dict()
-# pretrained_state_dict = torch.load(r'S:\ucf101-caffe.pth')
-
-# print(pretrained_state_dict.keys())
-# print(model_state_dict.keys())
-#
-# print(len(model_state_dict.keys()))
-# print(len(pretrained_state_dict.keys()))
-
-# from collections import OrderedDict
-# mydict = OrderedDict()
-#
-# for idx in range(len(model_state_dict.keys())):
-#     model_key = list(model_state_dict.keys())[idx]
-#     model_value = list(model_state_dict.values())[idx]
-#
-#     pretrained_key = list(pretrained_state_dict.keys())[idx]
-#     pretrained_value = list(pretrained_state_dict.values())[idx]
-#
-#     mydict[model_key] = pretrained_value
-#
-# model.load_state_dict(mydict, strict=True)
-#
-# torch.save(model.state_dict(), './c3d.pth')
