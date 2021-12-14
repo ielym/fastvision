@@ -59,8 +59,6 @@ class BaseDataset(Dataset):
         video_path = sample[0]
         category_idx = sample[1]
 
-        print(video_path)
-
         # ======================================== process image ========================================
         ori_frames = self.load_video(video_path)
 

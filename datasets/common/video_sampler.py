@@ -11,7 +11,6 @@ def countRealFrames(cap):
     '''
     cnt = 0
     ret, _ = cap.read()
-    print(cap, ret)
     while ret:
         cnt += 1
         ret, _ = cap.read()
