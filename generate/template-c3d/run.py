@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import sys
+sys.path.append(r'../')
+
 import argparse
 import os
 import random
@@ -26,7 +29,7 @@ parser.add_argument('--in_channels', default=3, type=int, help='')
 parser.add_argument('--input_size', default=112, type=int, help='')
 parser.add_argument('--clips', default=16, type=int, help='')
 parser.add_argument('--frames_per_clip', default=1, type=int, help='')
-parser.add_argument('--num_workers', default=0.2, type=float, help='')
+parser.add_argument('--num_workers', default=0, type=float, help='')
 
 # Loss
 parser.add_argument('--iou_negative_thres', default=0.5, type=float, help='for selecting response/negative/ignore samples when compute loss')
@@ -36,7 +39,7 @@ parser.add_argument('--ratio_cls', default=0.5, type=float, help='')
 
 # Train
 parser.add_argument('--device', default='cpu', type=str, help='cpu, or 0, 1 or 0')
-parser.add_argument('--epochs', default=300, type=int, help='')
+parser.add_argument('--epochs', default=50, type=int, help='')
 parser.add_argument('--initial_lr', default=1e-3, type=float, help='')
 parser.add_argument('--last_lr', default=1e-5, type=float, help='')
 parser.add_argument('--weight_decay', default=5e-4, type=float, help='')
@@ -44,12 +47,12 @@ parser.add_argument('--seed', default=2021, type=int, help='0/1/2/... or None')
 parser.add_argument('--DataParallel', default=True, type=bool, help='')
 parser.add_argument('--DistributedDataParallel', default=False, type=bool, help='')
 parser.add_argument('--SyncBatchNorm', default=True, type=bool, help='')
-parser.add_argument('--pretrained_weights', default=r'P:\PythonWorkSpace\c3d.pth', type=str, help='')
+parser.add_argument('--pretrained_weights', default=None, type=str, help='')
 
 
 # Inference
 parser.add_argument('--inference_weights', default=r'P:\PythonWorkSpace\last.pth', type=str, help='')
-parser.add_argument('--img_path', default=r'S:\datasets\voc2012\val\images', type=str, help='absolute path of a img or a folder')
+parser.add_argument('--data_path', default=r'S:\datasets\ucf101\test\videos', type=str, help='absolute path of a img or a folder')
 
 # cache
 parser.add_argument('--cache_dir', default='./cache', type=str, help='')

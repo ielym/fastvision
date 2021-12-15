@@ -35,13 +35,11 @@ class BaseDataset(Dataset):
             self.input_width = input_size[1]
 
         self.augmentation = Augmentation([
-                                # Resize(size=(128, 171), p=1.0),
-                                # RandomCrop(size=112, p=1.0),
-                                Resize(size=(600, 600), p=1.0),
-                                CenterCrop(size=500, p=1.0),
+                                Resize(size=(128, 171), p=1.0),
+                                RandomCrop(size=112, p=1.0),
                                 HorizontalFlip(p=0.5),
-                                # BGR2RGB(p=1.0),
-                                # Normalization(means_stds=Augmentation.imagenetNorm(mode='rgb'), p=1.0),
+                                BGR2RGB(p=1.0),
+                                Normalization(p=1.0),
                             ], mode='classification')
 
     def __len__(self):
@@ -73,9 +71,7 @@ class BaseDataset(Dataset):
         frames = np.concatenate(frames, 0) # (16, 112, 112, 3)
 
         # ======================================== process label ========================================
-        ori_labels = np.array([category_idx], dtype=np.float32).reshape([-1, 1])
-        labels = torch.from_numpy(ori_labels)
-
+        labels = torch.tensor(category_idx)
 
         frames = frames.transpose([3, 0, 1, 2])
         frames = np.ascontiguousarray(frames)
@@ -83,13 +79,6 @@ class BaseDataset(Dataset):
         frames = torch.from_numpy(frames)
 
         return frames, labels
-
-    @staticmethod
-    def collate_fn(batch):
-        img, label = zip(*batch)  # transposed
-        for i, l in enumerate(label):
-            l[:, 0] = i  # add target image index for build_targets()
-        return torch.stack(img, 0), torch.cat(label, 0)
 
 def load_samples(data_dir, prefix, num_workers, cache, use_cache):
 
@@ -102,6 +91,9 @@ def load_samples(data_dir, prefix, num_workers, cache, use_cache):
 
     videos_dir = os.path.join(data_dir, 'videos')
     labels_path = os.path.join(data_dir, 'labels.txt')
+
+    # videos_dir = r'\home\ymluo\datasets\train\videos'
+    # labels_path = r'\home\ymluo\datasets\train\labels.txt'
 
     with open(labels_path, 'r') as f:
         lines = f.readlines()
@@ -132,7 +124,6 @@ def create_dataloader(prefix, data_dir, batch_size, clips, frames_per_clip, inpu
                 # sampler=distributed.DistributedSampler(datasets, shuffle=shuffle),
                 drop_last=drop_last,
                 num_workers=num_workers if device.type != 'cpu' else 0,
-                collate_fn=BaseDataset.collate_fn,
             )
 
     return loader
