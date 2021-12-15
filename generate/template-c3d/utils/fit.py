@@ -6,11 +6,12 @@ from fastvision.utils.checkpoints import SaveModel
 
 class Fit():
 
-    def __init__(self, model, device, optimizer, scheduler, loss, end_epoch, start_epoch=0, train_loader=None, val_loader=None, test_loader=None):
+    def __init__(self, model, device, optimizer, scheduler, loss, metric, end_epoch, start_epoch=0, train_loader=None, val_loader=None, test_loader=None):
         self.model = model
         self.device = device
         self.optimizer = optimizer
         self.loss = loss
+        self.metric = metric
         self.start_epoch = start_epoch
         self.end_epoch = end_epoch
         self.train_loader = train_loader
@@ -48,6 +49,8 @@ class Fit():
 
                 pred = self.model(images)
 
+                metric = self.metric(pred, labels)
+
                 self.optimizer.zero_grad()
                 loss = self.loss(pred, labels)
 
@@ -55,12 +58,9 @@ class Fit():
                 self.optimizer.step()
 
                 t.set_description(f"Epoch {epoch + 1}")
-                t.set_postfix(batch=batch_idx + 1, loss=loss.item())
+                t.set_postfix(batch=batch_idx + 1, loss=loss.item(), metric=metric.item())
 
-            # lr_each_param_groups = [x['lr'] for x in self.optimizer.param_groups]
-            # print(lr_each_param_groups)
             self.scheduler.step()
-            print(self.optimizer.state_dict()['param_groups']) # dict_keys(['state', 'param_groups'])
 
     @torch.no_grad()
     def _val(self):
@@ -79,9 +79,6 @@ class Fit():
 
                 t.set_description(f"Validation")
                 t.set_postfix(batch=batch_idx + 1, loss=loss.item())
-
-            print(f'loss : {loss.item()}')
-
 
     def _test(self):
 

@@ -5,10 +5,11 @@ import torch
 import torch.nn as nn
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-from fastvision.videoRecognition.models import c3d
+from fastvision.videoRecognition.models import c3d, c3d_bn
 from fastvision.utils.checkpoints import LoadStatedict, SqueezeModel
 from fastvision.loss import CrossEntropyLoss
 from fastvision.utils.sheduler import CosineLR, LinearLR
+from fastvision.metrics import Accuracy
 
 from data_gen import create_dataloader
 from utils.fit import Fit
@@ -36,12 +37,13 @@ def dataloader_fn(args, device):
 def optimizer_fn(model, lr, weight_decay):
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=(0.937, 0.999), weight_decay=weight_decay)  # adjust beta1 to momentum
-
+    # optimizer = torch.optim.SGD(model.parameters(), lr=lr)
     return optimizer
 
 def model_fn(args, device):
 
-    model = c3d(in_channels=args.in_channels, num_classes=args.num_classes, including_top=True)
+    # model = c3d(in_channels=args.in_channels, num_classes=args.num_classes, including_top=True)
+    model = c3d_bn(in_channels=args.in_channels, num_classes=args.num_classes, including_top=True)
 
     if args.pretrained_weights:
         model = LoadStatedict(model=model, weights=args.pretrained_weights, device=device, strict=False)
@@ -58,7 +60,7 @@ def model_fn(args, device):
         print('Model : using SyncBatchNorm')
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
 
-    model = SqueezeModel(model, 'all', False)
+    model = SqueezeModel(model, 'all', True)
     model = SqueezeModel(model, ['classifier'], True)
 
     model.half().float()
@@ -75,6 +77,9 @@ def Train(args, device):
     # # ======================= Loss ============================
     loss = CrossEntropyLoss(reduction='mean')
 
+    # # ======================= metrics ============================
+    metric = Accuracy()
+
     # ======================= Optimizer ============================
     optimizer = optimizer_fn(model=model, lr=1, weight_decay=args.weight_decay) # here lr have to set to 1
     scheduler = CosineLR(optimizer=optimizer, steps=args.epochs, initial_lr=args.initial_lr, last_lr=args.last_lr)
@@ -84,6 +89,8 @@ def Train(args, device):
                 optimizer=optimizer,
                 scheduler=scheduler,
                 loss=loss,
+                metric=metric,
+
                 start_epoch=0,
                 end_epoch=args.epochs,
 

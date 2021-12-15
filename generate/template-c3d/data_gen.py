@@ -38,8 +38,8 @@ class BaseDataset(Dataset):
                                 Resize(size=(128, 171), p=1.0),
                                 RandomCrop(size=112, p=1.0),
                                 HorizontalFlip(p=0.5),
-                                # BGR2RGB(p=1.0),
-                                # Normalization(means_stds=Augmentation.imagenetNorm(mode='rgb'), p=1.0),
+                                BGR2RGB(p=1.0),
+                                Normalization(p=1.0),
                             ], mode='classification')
 
     def __len__(self):
@@ -71,8 +71,7 @@ class BaseDataset(Dataset):
         frames = np.concatenate(frames, 0) # (16, 112, 112, 3)
 
         # ======================================== process label ========================================
-        ori_labels = np.array([category_idx], dtype=np.float32).reshape([-1, 1])
-        labels = torch.from_numpy(ori_labels)
+        labels = torch.tensor(category_idx)
 
         frames = frames.transpose([3, 0, 1, 2])
         frames = np.ascontiguousarray(frames)
@@ -92,6 +91,9 @@ def load_samples(data_dir, prefix, num_workers, cache, use_cache):
 
     videos_dir = os.path.join(data_dir, 'videos')
     labels_path = os.path.join(data_dir, 'labels.txt')
+
+    # videos_dir = r'\home\ymluo\datasets\train\videos'
+    # labels_path = r'\home\ymluo\datasets\train\labels.txt'
 
     with open(labels_path, 'r') as f:
         lines = f.readlines()
