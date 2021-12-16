@@ -43,33 +43,47 @@ def LoadStatedict(model, weights, device, strict=False):
     model_keys = model.state_dict().keys()
 
     useful_keys = OrderedDict()
-
+    no_use_keys = []
     for k, v in weights_dict.items():
         if k in model_keys and v.size() == model.state_dict()[k].size():
             useful_keys[k] = v
+        else:
+            no_use_keys.append(k)
+
     model.load_state_dict(useful_keys, strict=strict)
+
+    print('Load state_dict not load keys : ',  no_use_keys)
 
     return model
 
-def LoadFromParrel(model, weights, strict=False):
+def LoadFromParrel(model, weights, device, strict=False):
     try:
-        weights_dict = torch.load(weights)
+        weights_dict = torch.load(weights, map_location=device)
+
     except:
         head, tail = os.path.split(weights)
 
         tail_split = tail.split('.')
         tail = ''.join(tail_split[:-1]) + '-nonzip.' + tail_split[-1]
         weights = os.path.join(head, tail)
-        weights_dict = torch.load(weights)
+        weights_dict = torch.load(weights, map_location=device)
+
+    if 'model' in weights_dict.keys():
+        weights_dict = weights_dict['model']
 
     model_keys = model.state_dict().keys()
 
     useful_keys = OrderedDict()
-
+    no_use_keys = []
     for k, v in weights_dict.items():
         if k[7:] in model_keys and v.size() == model.state_dict()[k].size():
             useful_keys[k[7:]] = v
+        else:
+            no_use_keys.append(k)
+
     model.load_state_dict(useful_keys, strict=strict)
+
+    print('Load state_dict not load keys : ',  no_use_keys)
 
     return model
 
