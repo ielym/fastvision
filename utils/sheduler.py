@@ -32,12 +32,20 @@ def LinearLR(optimizer, steps, initial_lr, last_lr):
 
     return scheduler
 
-# epochs = 300
-# init_lr = 1e-3
-# minimum_lr = 1e-6
+def ExponentialLR(optimizer, steps, initial_lr, last_lr):
+    p = (last_lr / initial_lr) ** (1 / steps)
+
+    lr_func = lambda cur_step: initial_lr * p ** cur_step
+    scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_func)
+
+    return scheduler
+
+# epochs = 100
+# init_lr = 1e-10
+# last_lr = 10
 #
-# lr1 = CosineLR(epochs, init_lr, minimum_lr)
-# lr2 = LinearLR(epochs, init_lr, minimum_lr)
+# lr1 = ExponentialLR(epochs, init_lr, last_lr)
+# lr2 = LinearLR(epochs, init_lr, last_lr)
 #
 # lrs = []
 # for i in range(epochs):
