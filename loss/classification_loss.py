@@ -9,6 +9,12 @@ class CrossEntropyLoss(nn.Module):
         self.reduction = reduction
 
     def forward(self, y_pre, y_true, weights=None):
+        '''
+        :param y_pre: [N, 1000]
+        :param y_true: [N, 1]
+        :param weights:
+        :return:
+        '''
         num_classes = y_pre.size(-1)
         target_one_hot = one_hot(y_true, num_classes).float()
 

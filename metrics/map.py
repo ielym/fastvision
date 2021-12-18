@@ -55,14 +55,21 @@ class CalculateMAP:
 
         # Match by both IOU and Class. If IOU(i, j) == True and Class(i, j) == True, then Matched_mask(i, j) == True
         matched_mask = ((iou_mask == 1) & (cls_mask == 1)).float() # torch.Size([N, M])
-        matched_target_idx, matched_predict_idx = torch.where(matched_mask == 1)
+
+        # ================ for torch<1.0.1
+        matched_target_idx, matched_predict_idx = np.where(matched_mask.detach().cpu().numpy() == 1)
+        matched_target_idx = torch.from_numpy(matched_target_idx).to(matched_mask).long()
+        matched_predict_idx = torch.from_numpy(matched_predict_idx).to(matched_mask).long()
+        # ================ for torch>1.0.1
+        # matched_target_idx, matched_predict_idx = torch.where(matched_mask == 1)
+        #===============================================================================================================
         matched_target_predict_idx = torch.cat([matched_target_idx.view(-1, 1), matched_predict_idx.view(-1, 1)], dim=1).view(-1, 2)
         matched_target_predict_iou = iou_between_target_and_predict[matched_target_idx, matched_predict_idx].view(-1, 1)
         matched_target_predict_cls = target_cls[matched_target_idx].view(-1, 1)
         matched_target_predict_conf = predict_conf[matched_predict_idx].view(-1, 1)
 
         # For matched predicts-targets pairs, remove redundant pairs
-        matched_matrix = torch.cat([matched_target_predict_idx, matched_target_predict_iou, matched_target_predict_cls, matched_target_predict_conf], dim=1)
+        matched_matrix = torch.cat([matched_target_predict_idx.float(), matched_target_predict_iou, matched_target_predict_cls, matched_target_predict_conf], dim=1)
         matched_matrix = matched_matrix.detach().cpu().numpy()
         matched_matrix = matched_matrix[np.argsort(-matched_matrix[:, 2]), ...] # sort by iou, from large to small
         matched_matrix = matched_matrix[np.unique(matched_matrix[:, 1], return_index=True)[1], ...] # remove redundant predicts, to make sure one predict just correspoind to one target

@@ -13,17 +13,20 @@ from fastvision.utils.seed import set_random_seeds
 from fastvision.utils.device import set_device
 
 from train import Train
-# from inference import Inference
+from inference import Inference
 
 parser = argparse.ArgumentParser(description='FastVision')
 
-parser.add_argument('--mode', default='Train', choices=['Train', 'Test'], type=str, help='')
+parser.add_argument('--mode', default='Test', choices=['Train', 'Test'], type=str, help='')
 
 # Data generation
 parser.add_argument('--data_yaml', default=r'./data/voc.yaml', type=str, help='')
 parser.add_argument('--input_size', default=608, type=int, help='')
 parser.add_argument('--in_channels', default=3, type=int, help='')
 parser.add_argument('--max_det', default=300, type=int, help='')
+parser.add_argument('--nms_conf_threshold', default=0.25, type=float, help='')
+parser.add_argument('--nms_iou_threshold', default=0.45, type=float, help='')
+
 
 # YoLO
 parser.add_argument('--pretrained_weights', default=r'P:\PythonWorkSpace\fastvision-ttt\yolov3.pth', type=str, help='')
@@ -37,15 +40,21 @@ parser.add_argument('--ratio_cls', default=0.5, type=float, help='')
 
 
 # Train
-parser.add_argument('--device', default='0', type=str, help='cpu, or 0, 1 or 0')
+parser.add_argument('--device', default='cpu', type=str, help='cpu, or 0, 1 or 0')
 parser.add_argument('--epochs', default=300, type=int, help='')
-parser.add_argument('--batch_size', default=4, type=int, help='')
-parser.add_argument('--learning_rate', default=1e-3, type=float, help='')
+parser.add_argument('--batch_size', default=2, type=int, help='')
+parser.add_argument('--initial_lr', default=1e-3, type=float, help='')
+parser.add_argument('--last_lr', default=1e-5, type=float, help='')
 parser.add_argument('--weight_decay', default=5e-4, type=float, help='')
-parser.add_argument('--num_workers', default=0.3, type=float, help='')
+parser.add_argument('--num_workers', default=0.2, type=float, help='')
 parser.add_argument('--seed', default=2021, type=int, help='0/1/2/... or None')
 parser.add_argument('--DataParallel', default=True, type=bool, help='')
+parser.add_argument('--DistributedDataParallel', default=False, type=bool, help='')
 parser.add_argument('--SyncBatchNorm', default=True, type=bool, help='')
+
+# Inference
+parser.add_argument('--inference_weights', default=r'P:\PythonWorkSpace\last.pth', type=str, help='')
+parser.add_argument('--img_path', default=r'S:\datasets\voc2012\val\images', type=str, help='absolute path of a img or a folder')
 
 # cache
 parser.add_argument('--cache_dir', default='./cache', type=str, help='')
@@ -71,8 +80,9 @@ def main(args):
     if args.mode == 'Train':
         args.training = True
         Train(args=args, device=device)
-    # elif args.mode == 'Test':
-    #     Inference(args=args, device=device)
+    elif args.mode == 'Test':
+        args.training = False
+        Inference(args=args, device=device)
 
 if __name__ == '__main__':
     main(args)

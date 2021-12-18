@@ -34,7 +34,7 @@ class Yolov3(nn.Module):
         results = []
         if (self.training == False or val == True):
             for i in range(len(head_out)):
-                out = head_out[i].sigmoid()
+                out = head_out[i]
                 bs, num_anchors, height, width, _ = out.size()
 
                 offset_level = torch.tensor(offset(height, width, mode='yx')).to(out)
@@ -44,9 +44,9 @@ class Yolov3(nn.Module):
                 # wh = (out[..., 2:4] * 2) ** 2 * self.anchors_per_level[i].expand_as(out[..., 2:4])  # wh
 
                 xy = (out[..., 0:2].sigmoid() + offset_level) * self.backbone_strides_per_level[i]  # xy
-                wh = torch.exp(out[..., 2:4]) * self.anchors_per_level[i].expand_as(out[..., 2:4])  # wh
+                wh = torch.exp(out[..., 2:4]) * self.anchors_per_level[i].expand_as(out[..., 2:4]).to(out)  # wh
 
-                out = torch.cat((xy, wh, out[..., 4:]), -1)
+                out = torch.cat((xy, wh, out[..., 4:].sigmoid()), -1)
                 results.append(out.view(bs, -1, self.num_classes + 5))
             results = torch.cat(results, 1)
 

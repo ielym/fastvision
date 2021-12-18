@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from fastvision.detection.tools import wh_iou_batch, wh_iou, cal_iou
 from .classification_loss import CrossEntropyLoss, BiCrossEntropyLoss
+from .iou_loss import IOULoss, GIOULoss, DIOULoss, CIOULoss
 
 class Yolov3Loss(nn.Module):
 
@@ -19,6 +20,7 @@ class Yolov3Loss(nn.Module):
         self.iou_negative_thres = iou_negative_thres
 
         self.binary_cross_entropy_loss = BiCrossEntropyLoss(reduction='mean')
+        self.iou_loss = CIOULoss(reduction='mean')
 
         self.ratio_box = ratio_box
         self.ratio_conf = ratio_conf
@@ -53,9 +55,9 @@ class Yolov3Loss(nn.Module):
                 predict_wh = torch.exp(predict_corresponding_to_target[..., 2:4]) * anchors_corresponding_to_target
                 predict_xywh = torch.cat([predict_xy, predict_wh], dim=1)
                 targets_xywh = gt_xywh[layer_idx]
-                iou_between_predict_and_targets = cal_iou(predict_xywh, targets_xywh, mode='xywh')
-                loss_box += (1 - iou_between_predict_and_targets).mean()
+                loss_box += self.iou_loss(predict_xywh, targets_xywh, mode='xywh')
 
+                iou_between_predict_and_targets = cal_iou(predict_xywh, targets_xywh, mode='xywh')
                 targets_conf[select_target_batch_idx, select_target_anchor_idx, select_target_grid_xy[:, 1], select_target_grid_xy[:, 0], ...] = iou_between_predict_and_targets
 
             predict_conf = pre[..., 4:5].sigmoid()
@@ -65,7 +67,9 @@ class Yolov3Loss(nn.Module):
         loss_conf *= self.ratio_conf
         loss_cls *= self.ratio_cls
 
-        return loss_box + loss_conf + loss_cls
+        bs = y_pred[0].size(0)
+
+        return (loss_box + loss_conf + loss_cls) * bs
 
 
     def build_target(self, y_pred, y_true):
