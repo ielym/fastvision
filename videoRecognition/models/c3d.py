@@ -100,9 +100,6 @@ class C3D(nn.Module):
         return pool5
 
 def c3d(in_channels=3, num_classes=1000, including_top=True):
-    '''
-    pre-trained on Sports-1M with 487 categories
-    '''
     channels = [64, 128, 256, 512, 512]
     return C3D(in_channels=in_channels, num_classes=num_classes, num_blocks=[1, 1, 2, 2, 2], channels=channels, including_top=including_top)
 
