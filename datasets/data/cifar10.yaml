@@ -1,0 +1,6 @@
+data_root: 'S:\datasets\cifar10'
+train_dir: 'train'
+val_dir: 'val'
+test_dir: 'test'
+num_classes: 10
+categories: ['airplane', 'automobile', 'bird', 'cat', 'beer', 'dog', 'frog', 'horse', 'ship', 'truck']
