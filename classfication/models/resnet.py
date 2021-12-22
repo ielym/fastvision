@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from fastvision.utils import initialize_weights
 
 def conv3x3(in_channels, out_channels, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False):
     return nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
@@ -150,6 +151,8 @@ class ResNet(nn.Module):
         if self.including_top:
             self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
             self.fc = nn.Linear(self.planes, num_classes)
+
+        initialize_weights(self)
 
     def _make_layer(self, basic_block, mid_channels, num_blocks, downsample=False, downsample_stride=(1, 1)):
 
