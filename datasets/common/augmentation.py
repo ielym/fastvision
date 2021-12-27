@@ -70,13 +70,14 @@ class BGR2RGB():
 
 class Resize():
 
-    def __init__(self, size, interpolation=cv2.INTER_LINEAR, p=1.0):
+    def __init__(self, size, interpolation=cv2.INTER_LINEAR, resize_by='longer', p=1.0):
         '''
-        :param size: int or a tuple:(target_height, target_width). if int, then resize longer edge to size:int, and the mininum edge scales according the the ratio.
+        :param size: int or a tuple:(target_height, target_width). if int, then resize longer edge to size:int, and the ${resize_by} edge scales according the the ratio.
         :param p:
         '''
         self.size = size
         self.interpolation = interpolation
+        self.resize_by = resize_by
         self.p = p
 
         self.lock = False
@@ -95,7 +96,7 @@ class Resize():
             ori_height, ori_width = img.shape[:2]
 
             if isinstance(self.size, int):
-                ratio = self.size / max(ori_height, ori_width)
+                ratio = self.size / max(ori_height, ori_width) if self.resize_by == 'longer' else self.size / min(ori_height, ori_width)
                 ratio_height, ratio_width = ratio, ratio
             else:
                 ratio_height = self.size[0] / ori_height
