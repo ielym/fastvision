@@ -96,7 +96,7 @@ class Resize():
             ori_height, ori_width = img.shape[:2]
 
             if isinstance(self.size, int):
-                ratio = self.size / max(ori_height, ori_width) if self.resize_by == 'longer' else self.size / min(ori_height, ori_width)
+                ratio = (self.size / max(ori_height, ori_width)) if self.resize_by == 'longer' else (self.size / min(ori_height, ori_width))
                 ratio_height, ratio_width = ratio, ratio
             else:
                 ratio_height = self.size[0] / ori_height
