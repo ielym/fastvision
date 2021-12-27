@@ -24,21 +24,41 @@ def sampleFramesByIndex(cap, idxs):
     :return:
     '''
 
-    ret, frame = cap.read()
-
     frames = []
 
-    total = len(idxs)
-    already = 0
-    idx = 0
-    while ret and already < total:
-        if idx in idxs:
-            frames.append(np.expand_dims(frame, 0))
-            already += 1
-        idx += 1
+    for idx in idxs:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
         ret, frame = cap.read()
+        if ret:
+            frames.append(np.expand_dims(frame, 0))
 
     return np.concatenate(frames, axis=0)
+
+def consecutiveSampling(cap, frames=64, TOTAL_FRAMES=None):
+    '''
+    :param cap: cv2.VideoCapture
+    :param nums: sample frame numbers
+    :return:
+
+    sample consecutive ${frames} frames from a video
+    '''
+    TOTAL_FRAMES = math.floor(cap.get(cv2.CAP_PROP_FRAME_COUNT)) if not TOTAL_FRAMES else TOTAL_FRAMES
+    if TOTAL_FRAMES < frames:
+        raise Exception("consecutiveSampling TOTAL_FRAMES less than nums")
+
+    start_idx = random.randint(0, TOTAL_FRAMES - frames)
+    end_idx = start_idx + frames
+    sample_idxs = list(range(start_idx, end_idx))
+    sample_idxs.sort()
+
+    frames = sampleFramesByIndex(cap, sample_idxs)
+
+    if len(frames) != frames:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        real_frames = countRealFrames(cap)
+        frames = consecutiveSampling(cap, frames, real_frames)
+
+    return frames
 
 def randomSampling(cap, frames=1, TOTAL_FRAMES=None):
     '''
