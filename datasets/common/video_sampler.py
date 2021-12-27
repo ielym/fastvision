@@ -51,14 +51,14 @@ def consecutiveSampling(cap, frames=64, TOTAL_FRAMES=None):
     sample_idxs = list(range(start_idx, end_idx))
     sample_idxs.sort()
 
-    frames = sampleFramesByIndex(cap, sample_idxs)
+    sampled_frames = sampleFramesByIndex(cap, sample_idxs)
 
-    if len(frames) != frames:
+    if len(sampled_frames) != frames:
         cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
         real_frames = countRealFrames(cap)
-        frames = consecutiveSampling(cap, frames, real_frames)
+        sampled_frames = consecutiveSampling(cap, frames, real_frames)
 
-    return frames
+    return sampled_frames
 
 def randomSampling(cap, frames=1, TOTAL_FRAMES=None):
     '''
@@ -76,14 +76,14 @@ def randomSampling(cap, frames=1, TOTAL_FRAMES=None):
     sample_idxs = random.sample(range(TOTAL_FRAMES), frames)
     sample_idxs.sort()
 
-    frames = sampleFramesByIndex(cap, sample_idxs)
+    sampled_frames = sampleFramesByIndex(cap, sample_idxs)
 
-    if len(frames) != frames:
+    if len(sampled_frames) != frames:
         cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
         real_frames = countRealFrames(cap)
-        frames = randomSampling(cap, frames, real_frames)
+        sampled_frames = randomSampling(cap, frames, real_frames)
 
-    return frames
+    return sampled_frames
 
 def averageSampling(cap, frames=1, TOTAL_FRAMES=None):
     '''
@@ -102,14 +102,14 @@ def averageSampling(cap, frames=1, TOTAL_FRAMES=None):
     sample_idxs = list(range(0, step * frames, step))
     sample_idxs.sort()
 
-    frames = sampleFramesByIndex(cap, sample_idxs)
+    sampled_frames = sampleFramesByIndex(cap, sample_idxs)
 
-    if len(frames) != frames:
+    if len(sampled_frames) != frames:
         cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
         real_frames = countRealFrames(cap)
-        frames = averageSampling(cap, frames, real_frames)
+        sampled_frames = averageSampling(cap, frames, real_frames)
 
-    return frames
+    return sampled_frames
 
 def randomClipSampling(cap, clips=1, frames_per_clip=1, TOTAL_FRAMES=None):
     '''
@@ -138,11 +138,11 @@ def randomClipSampling(cap, clips=1, frames_per_clip=1, TOTAL_FRAMES=None):
         frames_idxs.extend(random.sample(range(start_idx, end_idx), 1))
     frames_idxs.sort()
 
-    frames = sampleFramesByIndex(cap, frames_idxs)
+    sampled_frames = sampleFramesByIndex(cap, frames_idxs)
 
-    if len(frames) != clips * frames_per_clip:
+    if len(sampled_frames) != clips * frames_per_clip:
         cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
         real_frames = countRealFrames(cap)
-        frames = randomClipSampling(cap, clips, frames_per_clip, real_frames)
+        sampled_frames = randomClipSampling(cap, clips, frames_per_clip, real_frames)
 
-    return frames
+    return sampled_frames
