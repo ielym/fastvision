@@ -170,7 +170,7 @@ class FastPathway(nn.Module):
         self.planes = int(64 * beta)
 
         self.conv1 = nn.Sequential(
-            nn.Conv3d(in_channels=in_channels, out_channels=self.planes, kernel_size=(5, 7, 7), stride=(1, 2, 2), padding=(2, 3, 3)),
+            nn.Conv3d(in_channels=in_channels, out_channels=self.planes, kernel_size=(5, 7, 7), stride=(1, 2, 2), padding=(2, 3, 3), bias=False),
             normalization(self.planes),
             nn.ReLU(inplace=True)
         )
@@ -238,7 +238,7 @@ class SlowPathway(nn.Module):
         self.planes = 64
 
         self.conv1 = nn.Sequential(
-            nn.Conv3d(in_channels=in_channels, out_channels=self.planes, kernel_size=(1, 7, 7), stride=(1, 2, 2), padding=(0, 3, 3)),
+            nn.Conv3d(in_channels=in_channels, out_channels=self.planes, kernel_size=(1, 7, 7), stride=(1, 2, 2), padding=(0, 3, 3), bias=False),
             normalization(self.planes),
             nn.ReLU(inplace=True)
         )
