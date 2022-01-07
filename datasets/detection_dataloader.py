@@ -97,9 +97,9 @@ class BaseDataset(Dataset):
 
     @staticmethod
     def collate_fn(batch):
-        img, label = zip(*batch)  # transposed
+        img, label = zip(*batch)
         for i, l in enumerate(label):
-            l[:, 0] = i  # add target image index for build_targets()
+            l[:, 0] = i
         return torch.stack(img, 0), torch.cat(label, 0)
 
 def _load_samples(img_name, images_dir, labels_dir, samples):
