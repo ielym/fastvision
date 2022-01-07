@@ -117,7 +117,7 @@ def randomClipSampling(cap, clips=1, frames_per_clip=1, TOTAL_FRAMES=None):
     :param nums: sample frame numbers
     :return:
 
-    sample from a video, first clip whole video into anverage {nums} frames, then sample a frame from each clip randomly.
+    sample from a video, first clip whole video into average {nums} frames, then sample a frame from each clip randomly.
     '''
     TOTAL_FRAMES = math.floor(cap.get(cv2.CAP_PROP_FRAME_COUNT)) if not TOTAL_FRAMES else TOTAL_FRAMES
 
