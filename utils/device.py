@@ -11,7 +11,7 @@ def set_device(devices):
 
         shards = {}
         for shard_idx, device in enumerate(devices):
-            shards[shard_idx] = device
+            shards[device] = shard_idx
         os.environ['FASTVISON_SHARDS'] = str(shards)
 
 
