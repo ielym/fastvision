@@ -12,7 +12,7 @@ def set_device(devices):
         shards = {}
         for shard_idx, device in enumerate(devices):
             shards[shard_idx] = device
-        os.environ['FASTVISON_SHARDS'] = device_str
+        os.environ['FASTVISON_SHARDS'] = shards
 
 
     cuda = len(devices) and torch.cuda.is_available()
