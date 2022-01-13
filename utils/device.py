@@ -6,7 +6,7 @@ def set_device(devices):
     if len(devices) == 0:
         os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
     else:
-        device_str = ','.join(devices)
+        device_str = ','.join([str(device) for device in devices])
         os.environ['CUDA_VISIBLE_DEVICES'] = device_str
 
         shards = {}
