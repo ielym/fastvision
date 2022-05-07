@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-def offset(height, width, mode='xy', dtype='torch'):
+def grid(height, width, mode='xy', dtype='torch'):
 
     def _numpy(height, width, mode):
         ys = np.arange(0, height)
