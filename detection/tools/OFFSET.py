@@ -1,13 +1,31 @@
 import numpy as np
+import torch
 
-def offset(height, width, mode='xy'):
-    ys = np.arange(0, height)
-    xs = np.arange(0, width)
+def offset(height, width, mode='xy', dtype='torch'):
 
-    offset_x, offset_y = np.meshgrid(xs, ys)
-    offset_yx = np.stack([offset_x, offset_y]).transpose([1, 2, 0])
+    def _numpy(height, width, mode):
+        ys = np.arange(0, height)
+        xs = np.arange(0, width)
 
-    if mode == 'xy':
-        offset_xy = offset_yx.transpose([1, 0, 2])
-        return offset_xy
-    return offset_yx
+        offset_x, offset_y = np.meshgrid(xs, ys)
+        offset_yx = np.stack([offset_x, offset_y]).transpose([1, 2, 0])
+
+        if mode == 'xy':
+            offset_xy = offset_yx.transpose([1, 0, 2])
+            return offset_xy
+        return offset_yx
+
+    def _torch(height, width, mode):
+        ys = torch.arange(0, height)
+        xs = torch.arange(0, width)
+
+        offset_x, offset_y = torch.meshgrid(xs, ys)
+        offset_yx = torch.stack([offset_x, offset_y]).permute(1, 2, 0)
+
+        if mode == 'xy':
+            offset_xy = offset_yx.permute(1, 0, 2)
+            return offset_xy
+
+        return offset_yx
+
+    return _torch(height, width, mode) if (dtype == 'torch') else _numpy(height, width, mode)
