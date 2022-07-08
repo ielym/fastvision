@@ -71,8 +71,8 @@ def xyxy_iou(xyxy1, xyxy2, eps=1e-7):
         return iou.reshape([-1, 1])
 
     def _torch(xyxy1, xyxy2):
-        area1 = (xyxy1[:, 2] - xyxy1[:, 0]) * (xyxy1[:, 3] - xyxy1[:, 1])
-        area2 = (xyxy2[:, 2] - xyxy2[:, 0]) * (xyxy2[:, 3] - xyxy2[:, 1])
+        area1 = (xyxy1[:, 2] - xyxy1[:, 0]) * (xyxy1[:, 3] - xyxy1[:, 1] + eps)
+        area2 = (xyxy2[:, 2] - xyxy2[:, 0]) * (xyxy2[:, 3] - xyxy2[:, 1] + eps)
 
         try:
             inter = (torch.minimum(xyxy1[:, 2], xyxy2[:, 2]) - torch.maximum(xyxy1[:, 0], xyxy2[:, 0])).clamp(0) * (torch.minimum(xyxy1[:, 3], xyxy2[:, 3]) - torch.maximum(xyxy1[:, 1], xyxy2[:, 1])).clamp(0)

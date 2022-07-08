@@ -61,6 +61,7 @@ def process_voc_dataset(img_id, input_annotation_dir, input_image_dir, output_im
     input_image_path = glob(os.path.join(input_image_dir, f'{img_id}.*'))
     assert len(input_image_path) == 1, f"please check {img_id} with {len(input_image_path)} match images : {input_image_path}"
     input_annotation_path = os.path.join(input_annotation_dir, f'{img_id}.xml')
+    print(input_image_path, input_annotation_path)
 
     # copy image to dest image folder
     shutil.copy(input_image_path[0], output_images_dir)
@@ -148,7 +149,8 @@ if __name__ == '__main__':
     ]
     category_names_idx_map = {name : idx for idx, name in enumerate(category_list)}
 
-    trans_voc_2_fastvision(voc_dir=r'S:\VOCdevkit\VOC2012', imgset_name=r'train.txt', output_dir=r'S:\datasets\voc2012\train', category_names_idx_map=category_names_idx_map, works=8)
-    trans_voc_2_fastvision(voc_dir=r'S:\VOCdevkit\VOC2012', imgset_name=r'val.txt', output_dir=r'S:\datasets\voc2012\val', category_names_idx_map=category_names_idx_map, works=8)
+    # trans_voc_2_fastvision(voc_dir=r'S:\VOCdevkit\VOC2012', imgset_name=r'train.txt', output_dir=r'S:\datasets\voc2012\train', category_names_idx_map=category_names_idx_map, works=8)
+    # trans_voc_2_fastvision(voc_dir=r'S:\VOCdevkit\VOC2012', imgset_name=r'val.txt', output_dir=r'S:\datasets\voc2012\val', category_names_idx_map=category_names_idx_map, works=8)
+    trans_voc_2_fastvision(voc_dir=r'S:\datasets\voc2012\VOCdevkit\VOC2012', imgset_name=r'test.txt', output_dir=r'S:\temp\test', category_names_idx_map=category_names_idx_map, works=8)
 
 
