@@ -1,0 +1,39 @@
+map@50	map@55	map@60	map@65	map@70	map@75	map@80	map@85	map@90	map@95	map@.5:.95
+0.5136	0.4654	0.4095	0.3414	0.2675	0.1922	0.1202	0.0660	0.0280	0.0050	yolov3_weights_from_github_ultralytics.pth
+0.24088026155546705
+map@50	map@55	map@60	map@65	map@70	map@75	map@80	map@85	map@90	map@95	map@.5:.95
+0.3943	0.3558	0.3112	0.2591	0.2017	0.1421	0.0870	0.0462	0.0188	0.0032	yolov3_weights_from_github_ultralytics.pth
+0.1819440726740018
+map@50	map@55	map@60	map@65	map@70	map@75	map@80	map@85	map@90	map@95	map@.5:.95
+0.5293	0.4790	0.4218	0.3523	0.2764	0.1985	0.1245	0.0681	0.0284	0.0051	yolov3_weights_from_github_ultralytics.pth
+0.24834044208465628
+map@50	map@55	map@60	map@65	map@70	map@75	map@80	map@85	map@90	map@95	map@.5:.95
+0.5136	0.4654	0.4095	0.3414	0.2675	0.1922	0.1202	0.0660	0.0280	0.0050	yolov3_weights_from_github_ultralytics.pth
+0.24088026155546705
+map@50	map@55	map@60	map@65	map@70	map@75	map@80	map@85	map@90	map@95	map@.5:.95
+0.5325	0.4854	0.4292	0.3603	0.2838	0.2044	0.1287	0.0703	0.0291	0.0052	yolov3_weights_from_github_ultralytics.pth
+0.2529076876796873
+map@50	map@55	map@60	map@65	map@70	map@75	map@80	map@85	map@90	map@95	map@.5:.95
+0.5308	0.4842	0.4284	0.3606	0.2851	0.2063	0.1304	0.0722	0.0300	0.0054	yolov3_weights_from_github_ultralytics.pth
+0.25334121693509015
+map@50	map@55	map@60	map@65	map@70	map@75	map@80	map@85	map@90	map@95	map@.5:.95
+0.5421	0.4955	0.4395	0.3706	0.2931	0.2126	0.1351	0.0743	0.0311	0.0055	yolov3_weights_from_github_ultralytics.pth
+0.25993934870104235
+map@50	map@55	map@60	map@65	map@70	map@75	map@80	map@85	map@90	map@95	map@.5:.95
+0.5499	0.5047	0.4489	0.3800	0.3026	0.2207	0.1409	0.0782	0.0327	0.0059	yolov3_weights_from_github_ultralytics.pth
+0.2664507014444463
+map@50	map@55	map@60	map@65	map@70	map@75	map@80	map@85	map@90	map@95	map@.5:.95
+0.5544	0.5111	0.4571	0.3892	0.3118	0.2293	0.1472	0.0821	0.0347	0.0064	yolov3_weights_from_github_ultralytics.pth
+0.27233059916151336
+map@50	map@55	map@60	map@65	map@70	map@75	map@80	map@85	map@90	map@95	map@.5:.95
+0.5537	0.5145	0.4622	0.3966	0.3216	0.2385	0.1536	0.0862	0.0359	0.0065	yolov3_weights_from_github_ultralytics.pth
+0.27693292376340733
+map@50	map@55	map@60	map@65	map@70	map@75	map@80	map@85	map@90	map@95	map@.5:.95
+0.5395	0.5021	0.4511	0.3881	0.3166	0.2351	0.1523	0.0873	0.0365	0.0067	yolov3_weights_from_github_ultralytics.pth
+0.2715237737664431
+map@50	map@55	map@60	map@65	map@70	map@75	map@80	map@85	map@90	map@95	map@.5:.95
+0.4989	0.4535	0.4041	0.3406	0.2740	0.1976	0.1284	0.0691	0.0287	0.0045	yolov3_weights_from_github_ultralytics.pth
+0.23992946807664767
+map@50	map@55	map@60	map@65	map@70	map@75	map@80	map@85	map@90	map@95	map@.5:.95
+0.0008	0.0006	0.0004	0.0003	0.0002	0.0001	0.0001	0.0000	0.0000	0.0000	yolov3_weights_from_github_ultralytics.pth
+0.000254827350056273

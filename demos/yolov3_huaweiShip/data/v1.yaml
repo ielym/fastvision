@@ -1,0 +1,6 @@
+data_root: '/home/ymluo/datasets1/huawei_det/V1'
+train_dir: 'train'
+val_dir: 'val'
+test_dir: ''
+num_classes: 10
+categories: ['lighthouse', 'sailboat', 'buoy', 'railbar', 'cargoship', 'navalvessels', 'passengership', 'dock', 'submarine', 'fishingboat']

@@ -1,0 +1,27 @@
+data_root: '/home/ymluo/datasets1/voc2012'
+#data_root: 'S:\datasets\voc2012'
+train_dir: 'train'
+val_dir: 'val'
+test_dir: 'val'
+num_classes: 20
+categories:
+- aeroplane
+- bicycle
+- bird
+- boat
+- bottle
+- bus
+- car
+- cat
+- chair
+- cow
+- diningtable
+- dog
+- horse
+- motorbike
+- person
+- pottedplant
+- sheep
+- sofa
+- train
+- tvmonitor
